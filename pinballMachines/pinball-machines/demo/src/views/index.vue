@@ -1,0 +1,1139 @@
+<template>
+    <div>
+        <div class="user">
+            <div class="topmachine" @click="showchooseM">
+                <p class="id">ID :{{ agencyId }}</p>
+                <p>{{ (remark == null || remark == '') ? '普通机器' : remark
+                    }}</p>
+                <p>{{ machineId }}<span
+                        v-if="extId + 1 != null && extId + 1 != 0 && extId + 1 != 'NaN' && extId != 'undefined'">-{{
+                Number(extId) + 1 }}</span></p>
+                <div>
+                    <span class="span1">|</span>
+                    <van-icon :name="arrowicon" />
+                </div>
+            </div>
+            <ul>
+                <li>
+                    <img :src="avatar" alt="">
+                    <div>
+                        <p>会员：{{ playerId }}</p>
+                        <p>场地：{{ addressName }}</p>
+                    </div>
+                    <div v-if="isCoin == false">
+                        <p class="yellow">余额：{{ coins / 100 }}</p>
+                        <p>币数：{{ coinsBind / coinFee }}</p>
+                    </div>
+                    <div v-else>
+                        <p class="yellow">余币：{{ Math.floor((coins + coinsBind) / 100) }}</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <van-popup class="showmachine" @click-overlay="arrowicon = 'arrow-down'" v-model:show="showBottom"
+            position="bottom" :style="{ height: '50%' }">
+            <van-divider :style="{ color: '#188aff', borderColor: '#1989fa', padding: '0 16px' }">
+                总共{{ machineList.length }}台-请选择机器
+            </van-divider>
+            <van-radio-group v-model="checked">
+                <van-cell-group inset>
+                    <van-cell
+                        :title="((item.name == null || item.name == '') ? '普通机器' : item.name) + ' - ' + item.machineId"
+                        clickable @click="changeCheck(item)" v-for="(item, index) in machineList" :key="item.machineId">
+                        <template #right-icon>
+                            <van-radio :name="item.machineId" />
+                        </template>
+                    </van-cell>
+                </van-cell-group>
+            </van-radio-group>
+        </van-popup>
+        <div class="gameLaunch">
+            <div class="cheap">
+                <span>投币启动</span>
+            </div>
+            <div class="add">
+                <img src="../static/img/subtract.png" alt="" @click="countReduce">
+                <div class="coins">投币数：
+                    <input v-model="count" min="1" class="input" type="number">个
+                </div>
+                <img src="../static/img/add.png" alt="" @click="countAdd">
+            </div>
+            <div class="button" @click="toggleImage">
+                <p>开始投币</p>
+                <p>点击即可启动机器</p>
+            </div>
+        </div>
+        <!-- 套餐充值 -->
+        <div class="bigBox">
+            <div class="cheap">
+                <span>套餐充值</span>
+            </div>
+            <div class="titles">
+                <!-- <p>套餐充值更优惠，游戏币全场通用。</p> -->
+                <!-- <p>游戏币全场通用。</p> -->
+            </div>
+            <div class="discounts">
+                <div class="coinPlan" v-for="(item, index) of rechargeConfigLists" :key="index"
+                    @click="onshowShop(item)" v-if="rechargeConfigLists.length > 0">
+                    <div class="money">充￥{{ item.fee }}</div>
+                    <div class="moneys" v-if="isCoin === false">得{{ item.coins }}元</div>
+                    <div class="moneys" v-else>得{{ item.coins }}币</div>
+                </div>
+                <div class="null" v-if="rechargeConfigLists.length <= 0">暂无充值套餐</div>
+            </div>
+        </div>
+        <!-- 玩家直投弹框 -->
+        <van-popup v-model:show="showplayer" position="bottom" :style="{ height: '50%' }">
+            <div class="title">
+                <span style="font-size: 18px; margin-left: 10px; margin-top: 10px;">玩家直投</span>
+                <div style="width: 30px; height: 30px;background-color:rgb(93, 195, 255);  position: relative;"
+                    @click="showplayer = false">
+                    <van-icon name="cross" class="icon" />
+                </div>
+            </div>
+            <div class="coinsContent">
+                <div class="coinPlan" v-if="coinInPlanList.length > 0" v-for="item in coinInPlanList"
+                    :key="item.coinInPlanId" @click="onInsertCoin(item, playerProfile)">
+                    <div class="coinPlan">
+                        <div>{{ parseFloat((toyuan(item.fee)).toPrecision(12)) }}元</div>
+                        <div class='yuan'>{{ item.coins }}币</div>
+                    </div>
+                </div>
+                <div class="null" v-else>暂无投币套餐</div>
+            </div>
+        </van-popup>
+    </div>
+
+    <!-- 投诉按钮 -->
+    <div style="position: fixed;right: 10px;bottom: 20%; text-align: center;">
+        <div style="position: relative;">
+            <div @click="openComplain">
+                <img src="../static/img/tousu.png">
+                <p style="color: #666; font-size: 13px; text-align: center;">留言投诉</p>
+            </div>
+            <div v-if="showPopup" class="popup-box" @click.stop>
+                <p class="popup-text" @click="toKefu">客服电话</p>
+                <p class="popup-text" @click="returnBack">意见反馈</p>
+            </div>
+        </div>
+        <!-- 点击其他区域关闭弹窗（可选） -->
+        <div v-if="showPopup" class="overlay" @click="showPopup = false"></div>
+    </div>
+
+
+
+    <van-popup class="van-popup-load" :overlay="false" style="--van-popup-background: rgba(0, 0, 0, 0)"
+        v-model:show="showLoading">
+        <van-loading type="spinner" />
+    </van-popup>
+</template>
+<script setup>
+import { ref, reactive, watch, onMounted } from 'vue';
+import { useRoute, useRouter, onBeforeRouteLeave } from "vue-router"
+import { showToast, showDialog, showConfirmDialog } from 'vant'
+import {
+    v3PlayerProfileAPI, v3PlayerCoinInPlanAPI,
+    v3PlayerMachineListAPI, v3PlayerCoinInAPI,
+    v3PlayerPlaceOrderAPI, v3PlayerRechargeConfigListAPI
+} from '../api/index'
+const router = useRouter()
+const route = useRoute()
+const showLoading = ref(false)
+const chooseMachine = ref('')
+const nowmachineId = ref(null)
+const extId = ref()
+extId.value = localStorage.getItem('shop_sExtId');
+if (extId.value == null || extId.value == 0 || extId.value == 'NaN' || extId.value == 'undefined') {
+    extId.value = 0
+}
+const arrowicon = ref('arrow-down')
+
+const avatar = ref(null)
+const nickname = ref(null)
+const playerId = ref(null)
+const coinFee = ref(null)
+const coins = ref(null)
+const coinsBind = ref(null)
+const addressId = ref(null)
+const machineId = ref(null)
+const remark = ref(null)
+const addressName = ref(null)
+const payCtrlMode = ref(null)
+const agencyId = ref(null)
+const name = ref('')
+const servicePhone = ref('')
+const isCoin = ref(false) // 判断是否为充币
+const showPopup = ref(false)
+const openComplain = () => {
+    showPopup.value = !showPopup.value
+}
+const toKefu = () => {
+    location.href = 'tel:' + servicePhone.value;
+}
+
+// 意见反馈
+const returnBack = () => {
+    router.push({
+        path: '/messageBoard',
+        query: {
+            addressId: addressId.value,
+            machineId: machineId.value
+        }
+    });
+}
+
+onMounted(() => {
+    getPost()
+    getRecharge()
+})
+// 页面创建时加载玩家数据：
+const getPost = async () => {
+    showLoading.value = true;
+    await v3PlayerProfileAPI().then((res) => {
+        showLoading.value = false;
+        if (res.data.code == 200) {
+            // console.log(res.data.data);
+            if (res.data.data.isOnLine == 0) {  //离线
+                router.push({
+                    path: '/hint'
+                });
+            }
+            if (res.data.data.shopMode == 1) {
+                sessionStorage.setItem('shopMode', 1);
+                router.push({
+                    path: '/hint'
+                });
+            } else {
+                sessionStorage.setItem('shopMode', 0);
+            }
+            avatar.value = res.data.data.avatar
+            isCoin.value = res.data.data.isCoin
+            nickname.value = res.data.data.nickname
+            playerId.value = res.data.data.playerId
+            coinFee.value = res.data.data.coinFee
+            coins.value = res.data.data.coins
+            coinsBind.value = res.data.data.coinsBind
+            addressId.value = res.data.data.addressId
+            machineId.value = res.data.data.machineId
+            remark.value = res.data.data.remark
+            addressName.value = res.data.data.addressName
+            payCtrlMode.value = res.data.data.payCtrlMode
+            agencyId.value = res.data.data.agencyId
+            servicePhone.value = res.data.data.servicePhone
+            name.value = res.data.data.name
+            getCoinInPlan(res.data.data.addressId)
+        } else {
+            showToast(res.data.message);
+        }
+    }).catch((error) => {
+        // showLoading.value = false;
+
+    });
+}
+
+const rechargeConfigLists = ref([])
+// 页面创建时加载充值套餐数据：
+const getRecharge = async () => {
+    showLoading.value = true;
+    await v3PlayerRechargeConfigListAPI().then((res) => {
+        showLoading.value = false;
+        console.log(res);
+        if (res.data.code == 200) {
+            console.log(res.data.data);
+            if (res.data.data) {
+                for (let i = 0; i < res.data.data.length; i++) {
+                    res.data.data[i].fee = res.data.data[i].fee / 100;
+                    res.data.data[i].coins = Math.floor(res.data.data[i].coins / 100);  //取整
+                    res.data.data[i].coinsBind = Math.floor(res.data.data[i].coinsBind / 100);
+                }
+                console.log(res.data.data);
+                rechargeConfigLists.value = res.data.data
+            } else {
+                rechargeConfigLists.value = [];
+            }
+
+        } else {
+            showToast(res.data.message);
+        }
+    }).catch((error) => {
+        showLoading.value = false;
+
+    });
+}
+
+
+// 页面创建时加载投币列表数据：
+const coinInPlanList = ref([])
+const getCoinInPlan = async (addressId) => {
+    showLoading.value = true;
+    await v3PlayerCoinInPlanAPI({
+        addressId: addressId
+    }).then((res) => {
+        showLoading.value = false;
+        if (res.data.code == 200) {
+            console.log(res.data, 'wanjiazhitou');
+            coinInPlanList.value = res.data.data
+
+        } else {
+            showToast(res.data.message);
+        }
+    }).catch((error) => {
+        // showLoading.value = false;
+
+    });
+}
+
+// 点击加载机器列表
+const showBottom = ref(false)
+const machineList = ref([])
+const showchooseM = async () => {
+    showLoading.value = true;
+    await v3PlayerMachineListAPI({
+        addressId: addressId.value
+    }).then((res) => {
+        showLoading.value = false;
+        if (res.data.code == 200) {
+            console.log(res.data);
+            machineList.value = res.data.data
+
+        } else {
+            showToast(res.data.message);
+        }
+    }).catch((error) => {
+        // showLoading.value = false;
+
+    });
+    showBottom.value = true
+    arrowicon.value = "arrow-up"
+}
+// 选择机器：
+const checked = ref(0)
+const changeCheck = (item) => {
+    checked.value = item.machineId
+    // console.log(item);
+    showBottom.value = false
+    name.value = item.name
+    machineId.value = item.machineId
+    arrowicon.value = "arrow-down"
+}
+
+const isButtonDisabled = ref(false);   // 控制按钮状态
+console.log(isButtonDisabled.value);
+
+
+const count = ref(1)
+// 减
+const countReduce = () => {
+    count.value--
+    if (count.value <= 1) {
+        count.value = 1
+    }
+}
+
+// 加
+const countAdd = () => {
+    count.value++
+}
+
+const showplayer = ref(false)
+const isButton = ref(false);   // 控制按钮状态
+
+// 投币：
+const toggleImage = () => {
+    if (isButton.value) return;
+    isButton.value = true;  //禁用按钮
+    if (machineId == null) {
+        isButton.value = false;
+        showToast('请先选择要投币的机器');
+        return false;
+    }
+
+    console.log(coins.value);
+
+    if (isCoin.value === false) {  //根据金额
+        console.log('根据金额');
+        if ((coinsBind.value / coinFee.value >= count.value && coinsBind.value > 0) || (coins.value / coinFee.value >= count.value && coins.value > 0)) { //默认投币
+            showConfirmDialog({
+                title: '在线支付',
+                message:
+                    '<span class="block">您确定在<span style="color: rgb(7, 193, 96);">' + remark.value + machineId.value + '-' + `${Number(extId.value) + 1}` + '</span>号机前</span>',
+                allowHtml: true
+            }).then(async () => {
+                showLoading.value = true;
+                console.log('余币多');
+                console.log(machineId.value);
+                console.log(extId.value);
+                console.log(count.value);
+                console.log(coins.value);
+                await v3PlayerCoinInAPI({
+                    machineId: machineId.value,
+                    extId: extId.value,
+                    coins: count.value,
+                    coinInPlanId: 0
+                }).then((res) => {
+                    showLoading.value = false;
+                    if (res.data.code == 200) {
+                        console.log(res.data);
+                        getPost()
+                        showDialog({
+                            message: remark.value + machineId.value + '投' + count.value + '币成功',
+                        }).then(() => {
+                            isButton.value = false;    // 恢复状态
+                        });
+
+                    } else {
+                        showDialog({
+                            title: '错误提示',
+                            message: res.data.message,
+                            confirmButtonText: '我知道了'
+                        }).then(() => {
+                            isButton.value = false;    // 恢复状态
+
+                        });
+
+                    }
+                }).catch((error) => {
+                    showLoading.value = false;
+                    isButton.value = false;
+
+                }).finally(() => {
+                    isButton.value = false; // 无论成功或失败，启用按钮
+
+                })
+            })
+                .catch(() => {
+                    isButton.value = false;  // 恢复状态
+
+                });
+
+        }
+        else { //即充即投
+            isButton.value = false;  // 恢复状态
+            console.log('余币不足');
+            console.log(machineId.value);
+            console.log(extId.value);
+            console.log(count.value);
+            showToast('余币不足');
+            showplayer.value = true
+        }
+    } else {  //根据币数
+        console.log('根据币数');
+        if ((coins.value + coinsBind.value >= count.value && coins.value + coinsBind.value > 0)) { //默认投币
+
+            showConfirmDialog({
+                title: '温馨提示',
+                message:
+                    '<span class="block">您确定在<span style="color: rgb(7, 193, 96);">' + remark.value + machineId.value + '-' + `${Number(extId.value) + 1}` + '</span>号机前</span>',
+                allowHtml: true
+            })
+                .then(async () => {
+                    showLoading.value = true;
+                    console.log('余币多');
+                    console.log(machineId.value);
+                    console.log(extId.value);
+                    console.log(count.value);
+                    console.log(coins.value);
+                    await v3PlayerCoinInAPI({
+                        machineId: machineId.value,
+                        extId: extId.value,
+                        coins: count.value
+                    }).then((res) => {
+                        showLoading.value = false;
+                        if (res.data.code == 200) {
+                            console.log(res.data);
+
+                            showDialog({
+                                message: remark.value + machineId.value + '投' + count.value + '币成功',
+                            }).then(() => {
+                                isButton.value = false;  // 恢复状态
+
+                            });
+                            coins.value = Math.floor(res.data.data.coins);
+                            coinsBind.value = Math.floor(res.data.data.coinsBind);
+
+                        } else {
+                            showDialog({
+                                title: '错误提示',
+                                message: res.data.message,
+                                confirmButtonText: '我知道了'
+                            }).then(() => {
+                                isButton.value = false;  // 恢复状态
+
+                            });
+
+                        }
+                    }).catch((error) => {
+                        showLoading.value = false;
+                        isButton.value = false;  // 恢复状态
+
+                    }).finally(() => {
+                        isButton.value = false; // 无论成功或失败，启用按钮
+                    })
+                })
+                .catch(() => {
+                    isButton.value = false;  // 恢复状态
+
+                });
+
+        }
+        else if (coins.value + coinsBind.value < count.value) { //即充即投
+            isButton.value = false;  // 恢复状态
+            console.log(123);
+            console.log('余币不足');
+            console.log(machineId.value);
+            console.log(extId.value);
+            console.log(count.value);
+            showToast('余币不足');
+            showplayer.value = true
+
+
+        }
+    }
+
+
+}
+
+// 玩家直投：
+const onInsertCoin = (item) => {
+    if (machineId == null) {
+        showToast('请先选择要投币的机器');
+        return false;
+    }
+
+    if (isCoin.value === false) {  //根据金额
+        console.log('根据金额');
+
+        var flag = (coins.value >= item.fee && coins.value > 0) || (coinsBind.value / coinFee.value >= item.coins && coinsBind.value > 0);
+        showConfirmDialog({
+            title: flag ? '当前使用余额或者余币支付' : '在线支付',
+            message:
+                '<span class="block">您确定在<span style="color: rgb(7, 193, 96);">' + remark.value + machineId.value + '-' + `${Number(extId.value) + 1}` + '</span>号机前</span>',
+            allowHtml: true
+        })
+            .then(async () => {
+                if ((coins.value >= item.fee && coins.value > 0) || (coinsBind.value / coinFee.value >= item.coins && coinsBind.value > 0)) {
+                    showLoading.value = true;
+                    console.log('余币多');
+                    console.log(machineId.value);
+                    console.log(extId.value);
+                    console.log(item.coins);
+                    await v3PlayerCoinInAPI({
+                        machineId: machineId.value,
+                        extId: extId.value,
+                        coins: item.coins,
+                        coinInPlanId: item.coinInPlanId
+                    }).then((res) => {
+                        showLoading.value = false;
+                        if (res.data.code == 200) {
+                            getPost()
+                            showDialog({
+                                message: remark.value + machineId.value + '投' + item.coins + '币成功',
+                            }).then(() => {
+                                // on close
+                            });
+
+                        } else {
+                            showDialog({
+                                title: '错误提示',
+                                message: res.data.message,
+                                confirmButtonText: '我知道了'
+                            }).then(() => {
+
+                            });
+                        }
+                    }).catch((error) => {
+                        showLoading.value = false;
+
+                    });
+                }
+                else { //即充即投
+                    showLoading.value = true;
+                    console.log(123);
+                    console.log('余币不足');
+                    console.log(machineId.value);
+                    console.log(extId.value);
+                    console.log(item.coins);
+                    await v3PlayerPlaceOrderAPI({
+                        machineId: machineId.value,
+                        rechargeConfigId: item.coinInPlanId,//ID
+                        rechargeType: 0,//充值币
+                        extMode: extId.value,//充值分支号
+                        rechargeDataSource: 1,//0默认充值  1及充启动
+                        frontUrl: 'https://www.huanxizn.com/newBlindBox/#/home/index'//支付完成后，前端跳转地址
+                    }).then((res) => {
+                        showLoading.value = false;
+                        if (res.data.code == 200) {
+                            // console.log(res.data);
+                            location.href = res.data.data
+
+                        } else {
+                            showToast(res.data.message);
+                        }
+                    }).catch((error) => {
+                        showLoading.value = false;
+
+                    });
+                }
+            })
+            .catch(() => {
+                // on cancel
+            });
+    } else {  //根据币数
+        console.log('根据币数');
+
+        showConfirmDialog({
+            title: '温馨提示',
+            message:
+                '<span class="block">您确定在<span style="color: rgb(7, 193, 96);">' + remark.value + machineId.value + '-' + `${Number(extId.value) + 1}` + '</span>号机前</span>',
+            allowHtml: true
+        })
+            .then(async () => {
+                // on confirm
+                // console.log(coins.value);
+                if ((coins.value + coinsBind.value >= item.coins && coins.value > 0)) { //默认投币
+                    showLoading.value = true;
+                    console.log('余币多');
+                    console.log(machineId.value);
+                    console.log(extId.value);
+                    console.log(item.coins);
+                    await v3PlayerCoinInAPI({
+                        machineId: machineId.value,
+                        extId: extId.value,
+                        coins: item.coins
+                    }).then((res) => {
+                        showLoading.value = false;
+                        if (res.data.code == 200) {
+                            // console.log(res.data);
+                            coins.value = Math.floor(res.data.data.coins);
+                            coinsBind.value = Math.floor(res.data.data.coinsBind);
+                            showDialog({
+                                message: remark.value + machineId.value + '投' + item.coins + '币成功',
+                            }).then(() => {
+                                // on close
+                            });
+
+                        } else {
+                            showDialog({
+                                title: '错误提示',
+                                message: res.data.message,
+                                confirmButtonText: '我知道了'
+                            }).then(() => {
+
+                            });
+                        }
+                    }).catch((error) => {
+                        showLoading.value = false;
+
+                    });
+                }
+                else if (coins.value < item.coins && coinsBind.value < item.coins) { //即充即投
+                    showLoading.value = true;
+                    console.log(123);
+                    console.log('余币不足');
+                    console.log(machineId.value);
+                    console.log(extId.value);
+                    console.log(item.coins);
+                    await v3PlayerPlaceOrderAPI({
+                        machineId: machineId.value,
+                        rechargeConfigId: item.coinInPlanId,//ID
+                        rechargeType: 0,//充值币
+                        extMode: extId.value,//充值分支号
+                        rechargeDataSource: 1,//0默认充值  1及充启动
+                        frontUrl: 'https://www.huanxizn.com/newBlindBox/#/home/index'//支付完成后，前端跳转地址
+                    }).then((res) => {
+                        showLoading.value = false;
+                        if (res.data.code == 200) {
+                            // console.log(res.data);
+                            location.href = res.data.data
+
+                        } else {
+                            showToast(res.data.message);
+                        }
+                    }).catch((error) => {
+                        showLoading.value = false;
+
+                    });
+                }
+            })
+            .catch(() => {
+                // on cancel
+            });
+    }
+
+}
+
+// 点击充值：
+const onshowShop = async (item) => {
+    showLoading.value = true;
+    if (extId.value == null || extId.value == undefined || extId.value == '') {
+        extId.value = 0
+    }
+    await v3PlayerPlaceOrderAPI({
+        rechargeConfigId: item.rechargeConfigId,  //ID
+        rechargeType: 0,  //充值币
+        extMode: extId.value,  //充值分支号
+        rechargeDataSource: 0, //0默认充值  1及充启动
+        frontUrl: 'https://www.huanxizn.com/newBlindBox/#/home/index' //支付完成后，前端跳转地址
+    }).then((res) => {
+        showLoading.value = false;
+        console.log(res.data);
+        if (res.data.code == 200) {
+            // console.log(res.data);
+            location.href = res.data.data;
+
+        } else {
+            showToast(res.data.message);
+        }
+    }).catch((error) => {
+        showLoading.value = false;
+
+    });
+
+}
+// 分转化成元：
+const toyuan = (points) => {
+    var exchangeRate = 0.01; // 1分对应的元数，此处为0.01元
+    var currency = points * exchangeRate; // 计算转化后的金额
+    return currency;
+}
+//制保留2位小数，如：2，会在2后面补上00.即2.00 
+const toDecimal = (x) => {
+    var f = parseFloat(x);
+    if (isNaN(f)) {
+        return false;
+    }
+    var f = Math.round(x * 100) / 100;
+    var s = f.toString();
+    var rs = s.indexOf('.');
+    if (rs < 0) {
+        rs = s.length;
+        s += '.';
+    }
+    while (s.length <= rs + 2) {
+        s += '0';
+    }
+    return s;
+}
+
+const getIfOnLine = async () => {  //判断是否离线
+    showLoading.value = true;
+    await v3PlayerProfileAPI().then((res) => {
+        showLoading.value = false;
+        if (res.data.code == 200) {
+            if (res.data.data.isOnLine == 0) {  //离线
+                router.push({
+                    path: '/hint'
+                });
+            }
+        } else {
+            showToast(res.data.message);
+        }
+    }).catch((error) => {
+        // showLoading.value = false;
+
+    })
+}
+
+onBeforeRouteLeave((to, from, next) => {
+    // 导航守卫===》导航离开该组件的对应路由时调用
+    /* to:即将要进入的目标 路由对象
+        from: 当前导航正要离开的路由
+        next:执行的效果，next(false): 中断当前的导航  next({ path: '/' }): 跳转到一个不同的地址
+    */
+    if (to.name == "toLogin") {
+        next(false);
+        // showToast("不能再返回了");
+    } else {
+        next();
+    }
+})
+
+const urlStr = ref('')
+urlStr.value = location.href
+let index = urlStr.value.lastIndexOf('\/');
+urlStr.value = urlStr.value.substring(index + 1, urlStr.value.length);
+watch(        //监测路由id的变化
+    () => urlStr.value,
+    (newurlStr) => {
+        // console.log(newurlStr);
+        if (newurlStr == 'index') {
+            extId.value = localStorage.getItem('shop_sExtId');
+            if (extId.value == null || extId.value == 0 || extId.value == 'NaN' || extId.value == 'undefined') {
+                extId.value = 0
+            }
+            getIfOnLine()
+        }
+    },
+    { immediate: true }
+)
+
+</script>
+<style scoped lang="less">
+.user {
+    margin: 0px 0px 20px 0px;
+    width: 100%;
+    height: 260px;
+    background: url(../static/img/top.png) no-repeat;
+    background-size: 100% 100%;
+    // border-radius: 20px;
+    color: #fff;
+    padding-top: 30px;
+
+    .topmachine {
+        width: 90%;
+        height: 65px;
+        border-radius: 10px;
+        line-height: 65px;
+        background-color: #fff;
+        margin: 0px auto;
+        color: #000;
+        font-size: 32px;
+        display: flex;
+        justify-content: space-around;
+
+        .id {
+            color: #0378d5;
+        }
+
+        .span1 {
+            font-size: 40px;
+            color: #006aff;
+            font-weight: 400;
+            line-height: 20px;
+            margin-right: 20px;
+        }
+
+        .van-icon {
+            font-size: 40px;
+            color: #006aff;
+            font-weight: 900;
+            line-height: 60px;
+        }
+    }
+
+    ul {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+
+        li {
+            margin: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 26px;
+
+            div {
+                margin: 15px 50px 0 10px;
+
+                p {
+                    margin: 10px 10px 18px 10px;
+                }
+            }
+
+            .yellow {
+                color: #fff000;
+            }
+        }
+
+        // .van-button {
+        //     position: absolute;
+        //     width: 260px;
+        //     height: 120px;
+        //     right: 10px;
+        //     top: 40px;
+        //     // background-color: linear-gradient(to right, #ff6034, #ee0a24);
+        //     color: #000;
+        // }
+
+
+    }
+
+    img {
+        width: 120px;
+        height: 120px;
+        margin-left: 20px;
+        margin-right: 0px;
+        border-radius: 50%;
+        vertical-align: middle;
+    }
+}
+
+.showmachine {
+
+    .van-radio-group {
+        margin-top: 30px;
+    }
+}
+
+
+
+.gameLaunch {
+    background-color: rgb(255, 255, 255);
+    width: 80%;
+    // height: 750px;
+    // text-align: center;
+    margin-left: 4%;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* 水平居中 */
+    align-items: center;
+    /* 垂直居中 */
+
+    padding: 50px;
+    padding-top: 20px;
+
+    .cheap {
+        // width: 3rem;
+        // margin-left: 220px;
+
+        span {
+            font-size: 40px;
+            border-bottom: 1px solid rgb(82, 177, 255);
+            text-align: center;
+            color: rgb(82, 177, 255);
+            font-weight: 600;
+
+        }
+    }
+
+    .input {
+        height: 0.8rem;
+        width: 1rem;
+        text-align: center;
+        background-color: rgb(242, 242, 242);
+        border: none;
+        color: #d00d02;
+        font-weight: 600;
+
+    }
+
+    .add {
+        margin-bottom: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: space-evenly;
+        padding-top: 30px;
+
+        .coins {
+            font-size: 30px;
+        }
+
+        img {
+            width: 60px;
+            height: 60px;
+            margin: 0 40px;
+        }
+    }
+
+    .button {
+        width: 400px;
+        height: 90px;
+        background: linear-gradient(to bottom, #69BFFF, #38A1FF);
+        border-radius: 20px;
+        box-shadow: 0px 10px 0px #FFA200, 0px 14px 10px rgba(0, 0, 0, 0.2);
+        border: 3px solid #FFA200;
+        padding-top: 10px;
+        text-align: center;
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .button:active {
+        box-shadow: 0px 5px 0px #FFA200, 0px 7px 5px rgba(0, 0, 0, 0.2);
+        transform: translateY(5px);
+    }
+
+    .null {
+        line-height: 400px;
+
+    }
+}
+
+.bigBox {
+    background-color: #fff;
+    margin-top: 3%;
+    padding: 30px;
+    width: 85%;
+    margin-left: 4%;
+    border-radius: 15px;
+
+    .cheap {
+
+        span {
+            font-size: 40px;
+            border-bottom: 1px solid rgb(82, 177, 255);
+            text-align: center;
+            color: rgb(82, 177, 255);
+            font-weight: 600;
+
+        }
+    }
+
+    .titles {
+        margin-top: 15px;
+
+        p {
+            font-size: 32px;
+            text-align: center;
+            color: #d00d02;
+            font-weight: 600;
+        }
+    }
+
+    .discounts {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-around;
+
+        .coinPlan {
+            font-size: 38px;
+            width: 300px;
+            height: 110px;
+            color: #fff;
+            background: linear-gradient(to bottom, #69BFFF, #38A1FF);
+
+            border-radius: 15px;
+            margin-top: 15px;
+            font-weight: 700;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+
+            .money {
+                padding: 3px;
+                color: #fff;
+                font-size: 32px;
+                border-bottom: 1px solid rgb(rgb(255, 162, 0));
+                margin-top: 5px;
+                margin-left: 10px;
+            }
+
+            .moneys {
+                margin-right: 10px;
+                color: rgb(255, 162, 0);
+                display: flex;
+                justify-content: flex-end;
+            }
+        }
+
+        .yuan {
+            color: #474747;
+        }
+
+        .null {
+            text-align: center;
+            line-height: 600px;
+
+        }
+    }
+}
+
+
+.title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    // background-color: #ccc;
+
+    .icon {
+        position: absolute;
+        left: 9px;
+        bottom: 0;
+        font-size: 40px;
+        text-align: center;
+        // padding-bottom: 15px;
+        // padding-left: 10px;
+
+    }
+}
+
+.coinsContent {
+    width: 700px;
+    height: 450px;
+    // background-color: #4a3a93;
+    margin-left: 25px;
+    margin-top: 15px;
+    // width: 70%;
+    // height: 750px;
+    // text-align: center;
+    border-radius: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-around;
+
+    .coinPlan {
+        font-size: 40px;
+        width: 210px;
+        height: 180px;
+        // color: rgb(93, 195, 255);
+        // color: #fff;
+        // background: linear-gradient(to bottom, rgb(254, 226, 88), rgb(250, 221, 170));
+
+        border: 2px solid rgb(93, 195, 255);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        margin: 5px;
+        font-weight: 900;
+    }
+
+}
+
+
+.swipe {
+    .my-swipe .van-swipe-item {
+        color: #fff;
+        font-size: 50px;
+        line-height: 300px;
+        text-align: center;
+        background-color: #39a9ed;
+    }
+}
+
+.popup-box {
+    position: absolute;
+    right: 2rem;
+    top: -22%;
+    width: 3.2rem;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: .2rem;
+    z-index: 1001;
+}
+
+.popup-text {
+    font-size: .4rem;
+    color: #333;
+    margin: .3rem;
+}
+
+.popup-text:nth-child(1) {
+    margin-bottom: .5rem;
+}
+
+.popup-text:hover {
+    color: #333;
+    cursor: pointer;
+}
+
+
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+}
+</style>
