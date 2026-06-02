@@ -56,7 +56,7 @@ const routes = [
   {
     path: '/home',
     name: 'home',
-    redirect: '/home/index',
+    redirect: to => ({ path: '/home/index', query: to.query }),
     component: Home,
     children: [
       {

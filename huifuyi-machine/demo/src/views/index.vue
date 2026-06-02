@@ -1,17 +1,17 @@
 <template>
     <div class="washingBox">
         <div class="top">
-            <img src="../static/img/huifu.jpg" alt="">
+            <img :src="topImageSrc" @error="onTopImageError" alt="">
         </div>
         <div class="middle">
             <span>机器编号:<i>{{ machineId }}</i></span>
             <span>余额:<i>{{ coins / 100 }}</i></span>
             <span>剩余次数:<i>{{ coinsBind / coinFee }}</i></span>
         </div>
-        <div class="bottom">
+        <div class="bottom" :style="{ background: `url(${bgImage}) no-repeat center center / cover` }">
 
             <div class="btn">
-                <div class="btn-on" @click="toggleImage">
+                <div class="btn-on" @click="toggleImage" :style="{ background: `url(${btnBgImage}) no-repeat center center / 100% 100%` }">
                     <p class="qidong">启动</p>
                 </div>
             </div>
@@ -20,7 +20,7 @@
             <img src="../assets/shuoming.png" alt="" @click="show = true">
             <p style="color: #666; font-size: 13px; text-align: center;">保护方法</p>
         </div>
-        <div class="chongzhi" @click="showpopup" v-if="rechargeConfigList.length > 0">
+        <div class="chongzhi" :style="{ backgroundColor: chongzhiBg }" @click="showpopup" v-if="rechargeConfigList.length > 0">
             <p>充&nbsp;值</p>
         </div>
         <van-popup class="van-popup-load" :overlay="false" style="--van-popup-background: rgba(0, 0, 0, 0)"
@@ -112,13 +112,15 @@
 </template>
 <script setup>
 document.querySelector('body').setAttribute('style', 'background-color:#eff6f9')
-import { ref, reactive, watch, onMounted } from 'vue';
+import { ref, reactive, watch, onMounted, computed } from 'vue';
 import { useRoute, useRouter, onBeforeRouteLeave } from "vue-router"
 import { showToast, showDialog, showConfirmDialog } from 'vant'
 import {
     v3PlayerProfileAPI, v3PlayerCoinInPlanAPI, v3PlayerCoinInAPI,
     v3PlayerPlaceOrderAPI, v3PlayerRechargeConfigListAPI
 } from '../api/index'
+import btnImgDefault from '../assets/btn-img.png'
+import btnImg444 from '../assets/444-btn-img.png'
 const router = useRouter()
 const route = useRoute()
 const machineId = ref(null)
@@ -148,12 +150,35 @@ const addressId = ref(null)
 const remark = ref(null)
 const addressName = ref(null)
 const payCtrlMode = ref(null)
-const agencyId = ref(null)
+const agencyId = ref(route.query.agencyId || sessionStorage.getItem('agencyId') || null)
 const name = ref('')
 const servicePhone = ref('')
 
 const showBuyCoins = ref(false)
 const showplayer = ref(false)
+const bgImage = ref(agencyId.value === '444' ? './static/img/444-yanjing.jpg' : './static/img/yanjing.jpg')
+// 背景图：优先预加载 webp，成功则替换，失败保留 jpg
+if (agencyId.value === '444') {
+    const img = new Image()
+    img.onload = () => { bgImage.value = 'https://static.huanxizn.com/customerService/444-yanjing.webp' }
+    img.onerror = () => { /* 保持 jpg 回退 */ }
+    img.src = 'https://static.huanxizn.com/customerService/444-yanjing.webp'
+}
+const btnBgImage = ref(agencyId.value === '444' ? btnImg444 : btnImgDefault)
+const chongzhiBg = ref(agencyId.value === '444' ? 'rgb(183, 225, 249)' : 'rgb(12, 149, 255)')
+
+// 顶部图片：优先加载 webp，失败回退 jpg
+const topImageSrc = computed(() => {
+    return agencyId.value === '444'
+        ? 'https://static.huanxizn.com/customerService/444-huifu.webp'
+        : './static/img/huifu.jpg'
+})
+const onTopImageError = (e) => {
+    if (e.target.src && e.target.src.includes('444-huifu.webp')) {
+        e.target.src = './static/img/444-huifu.jpg'
+    }
+}
+
 onMounted(() => {
     // myButton.value.click()
     getPost()
@@ -190,7 +215,9 @@ const getPost = async () => {
             remark.value = res.data.data.remark
             addressName.value = res.data.data.addressName
             payCtrlMode.value = res.data.data.payCtrlMode
-            agencyId.value = res.data.data.agencyId
+            if (agencyId.value == null) {
+                agencyId.value = res.data.data.agencyId
+            }
             servicePhone.value = res.data.data.servicePhone
 
 
@@ -337,7 +364,7 @@ const onInsertCoins = async (item) => {
 
 // 点击充值：
 const onshowShop = async (item) => {
-    console.log(item);
+    // console.log(item);
     showLoading.value = true;
     if (extId.value == null || extId.value == undefined || extId.value == '') {
         extId.value = 0
@@ -347,12 +374,12 @@ const onshowShop = async (item) => {
         rechargeType: 0,  //充值币
         extMode: extId.value,  //充值分支号
         rechargeDataSource: 0, //0默认充值  1及充启动
-        frontUrl: 'https://www.huanxizn.com/newwashing/#/home/index' //支付完成后，前端跳转地址
+        frontUrl: 'https://www.huanxizn.com/newwashing/#/home/index?agencyId=' + agencyId.value //支付完成后，前端跳转地址
     }).then((res) => {
         showLoading.value = false;
         console.log(res.data);
         if (res.data.code == 200) {
-            console.log(res.data);
+            console.log(res.data,"跳转支付");
             location.href = res.data.data;
 
         } else {
@@ -533,7 +560,6 @@ watch(        //监测路由id的变化
 
     .bottom {
         height: 850px;
-        background: url('../static/img/yanjing.jpg') no-repeat center center/cover;
 
         .btn {
             width: 100%;
@@ -549,8 +575,6 @@ watch(        //监测路由id的变化
                 height: 340px;
                 border-radius: 50%;
                 margin: 0 auto;
-                background: url(../assets/btn-img.png) no-repeat;
-                background-size: 100% 100%;
                 color: #fff;
                 text-align: center;
                 font-size: 38px;
@@ -616,7 +640,6 @@ thead th {
     position: fixed;
     bottom: 0;
     left: 0;
-    background-color: rgb(12, 149, 255);
     width: 100%;
     height: 110px;
 

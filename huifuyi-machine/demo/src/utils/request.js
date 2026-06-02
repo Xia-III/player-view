@@ -5,7 +5,10 @@ import { useRouter } from "vue-router"
 import { delCookie } from './cookie.js'
 const router = useRouter()
 
-axios.defaults.baseURL = "https://www.huanxizn.com"
+// 开发环境走代理（空字符串），生产环境走真实地址
+axios.defaults.baseURL = process.env.NODE_ENV === 'development'
+  ? ''
+  : 'https://www.huanxizn.com'
 axios.defaults.timeout = 130000
 axios.defaults.headers = {
     Accept: 'application/json;charset=UTF-8',

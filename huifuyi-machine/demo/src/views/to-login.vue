@@ -13,9 +13,14 @@ import { useRoute, useRouter } from "vue-router"
 const router = useRouter()
 const route = useRoute()
 const showLoading = ref(false)
+const agencyId = route.query.agencyId || ''
 sessionStorage.setItem('shopMode', 0);
+if (agencyId) {
+    sessionStorage.setItem('agencyId', agencyId);
+}
 router.replace({
-    path: '/home'
+    path: '/home',
+    query: agencyId ? { agencyId } : undefined
 });
 
 </script>

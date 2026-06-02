@@ -6,10 +6,12 @@
         </div>
         <div class="weixin-con" v-if="weixinShow">
             <div class="bg-top">
-                <img class="img-logo" src="../static/img/login.jpg" />
-                本商城需要获取用户头像与昵称关联订单信息，用于支付。
+                <img class="img-logo" :src="logoImgSrc" @error="onLogoError" />
             </div>
             <van-button class="info-btn" :disabled="disType" type="primary" @click="wxGetCode">确认登录</van-button>
+        </div>
+        <div class="bottom-tip" v-if="weixinShow">
+            本商城需要获取用户头像与昵称关联订单信息，用于支付。
         </div>
     </div>
     <van-popup class="van-popup-load" :overlay="false" style="--van-popup-background: rgba(0, 0, 0, 0)"
@@ -46,6 +48,13 @@ const getUrlParam = (name) => {
     return null;
 }
 
+// 从完整 URL 中提取参数（兼容 ?agencyId=467/index.html#/login 格式）
+const getQueryParam = (name) => {
+    let reg = new RegExp('[?&]' + name + '=([^&#/]+)');
+    let r = location.href.match(reg);
+    return r ? decodeURIComponent(r[1]) : null;
+}
+
 const router = useRouter()
 const route = useRoute()
 const showLoading = ref(false)
@@ -55,11 +64,25 @@ const weixinShow = ref(false)
 const disType = ref(false)
 const starterMachineId = ref('') //机器ID
 const extId = ref(0) //分机号
+const agencyId = ref('') //代理商ID
 // const code = ref('')
 
 // 现在：
 starterMachineId.value = localStorage.getItem('shop_starterMachineId').substring(4)
 extId.value = localStorage.getItem('shop_sExtId')
+agencyId.value = getQueryParam('agencyId')
+console.log('agencyId:', agencyId.value)
+
+const logoImgSrc = ref('./static/img/login.jpg')
+if (agencyId.value === '444') {
+  logoImgSrc.value = 'https://static.huanxizn.com/customerService/444-login.webp'
+}
+const onLogoError = () => {
+  if (agencyId.value === '444') {
+    logoImgSrc.value = './static/img/444-login.jpg'
+  }
+}
+
 const isButtonDisabled = ref(false);
 
 const getOpenId = async (code) => {
@@ -91,7 +114,7 @@ const getOpenId = async (code) => {
             //     path: '/toLogin'
             // })
             const host = window.location.host
-            window.location.href = 'https://' + host + '/newwashing/#/toLogin'
+            window.location.href = 'https://' + host + '/newwashing/#/toLogin' + (agencyId.value ? '?agencyId=' + agencyId.value : '')
         }
         // else if (res.data.code == 998) {
         //     showDialog({
@@ -131,17 +154,18 @@ const apGetCode = () => {
     })
 }
 
+//进入时有无code，如果没有就去微信授权，token过期时才需手动授权，如果有就直接传code给后台获取用户信息
 
 // 微信打开时调用：
 const wxGetCode = async () => {
     let code = getUrlParam('code');
-    // console.log(code);
+    console.log(code);
     // let code = '071Ljh1w3NSEk13L3h0w3Ysgo13Ljh1a'; // 截取路径中的code，如果没有就去微信授权，如果已经获取到了就直接传code给后台获取openId
     const local = window.location.href; //获取当前页面的url
     disType.value = true;
     if (code == null || code === '') {
         window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=' + APPID +
-            '&redirect_uri=' + encodeURIComponent(local) + '&response_type=code&scope=snsapi_userinfo&state=1#wechat_redirect'
+            '&redirect_uri=' + encodeURIComponent(local) + '&response_type=code&scope=snsapi_userinfo&state=1&agencyId=' + agencyId.value + '#wechat_redirect'
     } else {
         await getOpenId(code); //把code传给后台获取用户信息
         code = ''
@@ -206,7 +230,18 @@ onMounted(() => {
         }
     }
 
-    .weixin-con {
+    .bottom-tip {
+        position: fixed;
+        bottom: 40px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        color: #999;
+        font-size: 24px;
+        z-index: 10;
+    }
+
+.weixin-con {
         width: 100%;
         text-align: center;
         position: fixed;
@@ -220,7 +255,7 @@ onMounted(() => {
             font-size: 34px;
 
             .img-logo {
-                width: 15%;
+                width: 35%;
                 display: block;
                 margin: -2rem auto 0.3rem;
             }
@@ -237,3 +272,4 @@ onMounted(() => {
     }
 }
 </style>
+
