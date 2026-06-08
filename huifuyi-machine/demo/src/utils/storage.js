@@ -19,14 +19,20 @@ export function setStorageExpire(key, value, expire) {
 export function getStorageExpire(key) {
     const val = localStorage.getItem(key);
     if (val != null) {
-        let storageInfo = JSON.parse(val);
-        const timeSpan = Date.now() - storageInfo.time;
+        try {
+            let storageInfo = JSON.parse(val);
+            const timeSpan = Date.now() - storageInfo.time;
 
-        if (timeSpan > storageInfo.expire) {
+            if (timeSpan > storageInfo.expire) {
+                localStorage.removeItem(key);
+                return null;
+            }
+            return storageInfo.data;
+        } catch (e) {
+            // JSON解析失败（localStorage数据损坏），移除无效数据
             localStorage.removeItem(key);
             return null;
         }
-        return storageInfo.data;
     }
     return null;
 }

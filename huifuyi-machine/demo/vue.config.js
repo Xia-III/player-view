@@ -52,3 +52,24 @@ module.exports = defineConfig({
 //   console.log('✅ 测试参数已设置，可以访问 /#/home/index 了');
 // })();
 
+// 复现白屏 bug：washing_tokenStarter 数据损坏（非合法 JSON），导致 router.beforeEach 中 JSON.parse 崩溃
+// 使用方式：在控制台执行后，访问 /#/home/index 即可复现白屏
+// (function() {
+//   // 1. 机器信息
+//   localStorage.setItem('shop_starterMachineId', 'FA7F20002165');
+//   localStorage.setItem('shop_sExtId', '0');
+  
+//   // 2. 模拟 washing_tokenStarter 数据损坏（普通字符串，不是 JSON）
+//   //    这会导致 getStorageExpire() 内 JSON.parse(val) 抛出 SyntaxError
+//   localStorage.setItem('washing_tokenStarter', 'i am not json, corrupted data');
+  
+//   // 3. washing_heardTokenStarter 是 axios 拦截器直接读取的值（不需要 JSON.parse），正常设置
+//   localStorage.setItem('washing_heardTokenStarter', 'corrupted-token-placeholder');
+  
+//   // 4. 机构主题（可选）
+//   sessionStorage.setItem('agencyId', '444');
+  
+//   console.log('✅ 白屏复现参数已设置，请访问 /#/home/index 观察白屏效果');
+//   console.log('⚠️  修复后，此场景应正常跳转到 /paycoins 扫码页，而非白屏');
+// })();
+
