@@ -72,6 +72,12 @@ export const v3PlayerCoinIn = data => request({
     url: vending + 'api/v3/Player/CoinIn',
     data
 })
+// 扫码订单详情(VendingQrOrderInfo)
+export const VendingQrOrderInfo = params => request({
+    method: 'GET',
+    url: vending + 'api/v3/Player/VendingQrOrderInfo',
+    params
+})
 
 
 // 测试投币：

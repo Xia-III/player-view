@@ -7,20 +7,21 @@
     </van-popup>
 </template>
 <script setup>
-import { v3PlayerProfileAPI } from '../api/index'
-import { ref, reactive, watch } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from "vue-router"
 const router = useRouter()
 const route = useRoute()
-const showLoading = ref(false)
+const showLoading = ref(true)
 const agencyId = route.query.agencyId || ''
 sessionStorage.setItem('shopMode', 0);
 if (agencyId) {
     sessionStorage.setItem('agencyId', agencyId);
 }
-router.replace({
-    path: '/home',
-    query: agencyId ? { agencyId } : undefined
+onMounted(() => {
+    router.replace({
+        path: '/home',
+        query: agencyId ? { agencyId } : undefined
+    });
 });
 
 </script>

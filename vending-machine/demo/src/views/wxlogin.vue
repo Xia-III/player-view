@@ -58,8 +58,9 @@ const extId = ref(0) //分机号
 // const code = ref('')
 
 // 现在：
-starterMachineId.value = localStorage.getItem('shop_starterMachineId').substring(4)
-extId.value = localStorage.getItem('shop_sExtId')
+const storedMachineId = localStorage.getItem('shop_starterMachineId')
+starterMachineId.value = storedMachineId ? storedMachineId.substring(4) : ''
+extId.value = localStorage.getItem('shop_sExtId') || 0
 const getOpenId = async (code) => {
     if (starterMachineId.value == null || starterMachineId.value == undefined || starterMachineId.value == 'null') {
         starterMachineId.value = '';
@@ -79,9 +80,8 @@ const getOpenId = async (code) => {
             localStorage.setItem('shop_heardTokenStarter', res.data.data);
             // 设置登录的过期时间24小时即1440分钟 单位分钟
             setStorageExpire('shop_tokenStarter', res.data.data, 1440);
-            router.push({
-                path: '/toLogin'
-            })
+            const host = window.location.host
+            window.location.href = 'https://' + host + '/newVending/#/toLogin'
         }
         //  else if (res.data.code == 998) {
         //     showDialog({
@@ -137,18 +137,17 @@ const wxGetCode = () => {
     }
 }
 
+
+
 onMounted(() => {
+    var ua = window.navigator.userAgent.toLowerCase();
     if (ua.match(/MicroMessenger/i) == 'micromessenger') {
         if (getStorageExpire('shop_tokenStarter')) {
             wxGetCode()
             console.log(12121212);
         }
     }
-})
-
-
-// 判断是用微信还是支付宝打开的
-var ua = window.navigator.userAgent.toLowerCase();
+    // 判断是用微信还是支付宝打开的
 if (ua.match(/MicroMessenger/i) == 'micromessenger') {//微信内置浏览器
     // wxGetCode();
     showInfo.value = false;
@@ -160,17 +159,22 @@ if (ua.match(/MicroMessenger/i) == 'micromessenger') {//微信内置浏览器
         console.log(3333);
         getOpenId(code); //把code传给后台获取用户信息
     }
-} else if (ua.match(/AlipayClient/i) == 'alipayclient') {//支付宝内置浏览器
+    } else if (ua.match(/AlipayClient/i) == 'alipayclient') {//支付宝内置浏览器
     // alert('456')
     apGetCode()
     // alert('9')
     showInfo.value = false;
     weixinShow.value = false;
-} else {
+    } else {
     showToast("请用支付宝或者微信打开本页面");
     showInfo.value = true;
     weixinShow.value = false;
-}
+    }
+})
+
+
+
+
 
 
 

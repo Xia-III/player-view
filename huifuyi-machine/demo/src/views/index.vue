@@ -232,7 +232,7 @@ const getPost = async () => {
             showToast(res.data.message);
         }
     }).catch((error) => {
-        // showLoading.value = false;
+        showLoading.value = false;
 
     });
 }

@@ -5,7 +5,7 @@ import { useRouter } from "vue-router"
 import { delCookie } from './cookie.js'
 const router = useRouter()
 
-axios.defaults.baseURL = "https://www.huanxizn.com"
+axios.defaults.baseURL = process.env.NODE_ENV === 'development' ? '' : 'https://www.huanxizn.com'
 axios.defaults.timeout = 8000
 axios.defaults.headers = {
     Accept: 'application/json;charset=UTF-8',

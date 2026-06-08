@@ -82,11 +82,14 @@ const getDataFee = async () => {
             // })
         } else if (res.data.code == 202) {
             showToast('该场地已被禁用，请联系工作人员');
-        } else {
+        }  else {
             showToast(res.data.message);
         }
     }).catch((error) => {
         showLoading.value = false;
+        router.push({
+            path: '/login'
+        });
     });
 }
 

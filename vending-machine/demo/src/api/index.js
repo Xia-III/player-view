@@ -5,7 +5,7 @@ import {
     , v3PlayerCoinIn, v3PlayerPlaceOrder
     , v3PlayerRechargeConfigList, v3PlayerRecharge,
     v3PlayerCoinList, v3PlayerChangeAddress,
-    GetTestMachineCoins, OnlineCoinInTest
+    GetTestMachineCoins, OnlineCoinInTest, VendingQrOrderInfo
 } from './v3paybox1.js'
 import {
     v3WwjPlayerProfile, v3WwjPlayerMachineList, v3WwjAuthPlayerAuth, v3WwjAuthScanQRCode
@@ -26,6 +26,9 @@ export const v3PlayerRechargeConfigListAPI = v3PlayerRechargeConfigList
 export const v3PlayerRechargeAPI = v3PlayerRecharge
 export const v3PlayerCoinListAPI = v3PlayerCoinList
 export const v3PlayerChangeAddressAPI = v3PlayerChangeAddress
+export const VendingQrOrderInfoAPI = VendingQrOrderInfo
+
+
 
 // v3clawMachice相关接口：
 export const v3WwjPlayerProfileAPI = v3WwjPlayerProfile

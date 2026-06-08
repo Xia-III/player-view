@@ -13,6 +13,7 @@ import Hint from '../views/hint.vue'
 import TestCoin from '../views/test-coin.vue'
 import Users from '../views/users.vue'
 import CoinSuccess from '../views/coinSuccess.vue'
+import OrderInfo from '../views/orderInfo.vue'
 
 const routes = [
   {
@@ -126,6 +127,14 @@ const routes = [
     }
   },
   {
+    path: '/orderInfo',
+    name: 'orderInfo',
+    component: OrderInfo,
+    meta: {
+      title: "订单详情"
+    }
+  },
+  {
     path: '/users',
     name: 'users',
     component: Users,
@@ -164,7 +173,7 @@ router.beforeEach((to, from, next) => {
   if (isEmpty(username) == false) {
     next()
   } else {
-    if (to.name == 'login' || to.name == 'paycoins' || to.name == 'testCoin') {
+    if (to.name == 'login' || to.name == 'paycoins' || to.name == 'testCoin' || to.name == 'orderInfo') {
       next()
     } else {
       next(`paycoins`)
