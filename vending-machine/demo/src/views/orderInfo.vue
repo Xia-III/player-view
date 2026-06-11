@@ -5,7 +5,6 @@
             <van-cell title="订单编号" :label="orderData.orderId" />
             <van-cell title="机器编号" :value="orderData.machineId" />
             <van-cell title="场地名称" :value="orderData.addressName" />
-            <van-cell title="取货序号" :value="orderData.deviceOrderSeq" />
             <van-cell title="订单金额" :value="'¥' + totalFee" value-class="price-red" />
         </van-cell-group>
 
