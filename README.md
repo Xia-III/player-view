@@ -2,8 +2,6 @@ authorizedLogind  ///玩家授权
 
 basketball  ///篮球机
 
-blind-box  ///弹珠机
-
 candy-machine  ///糖果机
 
 clamp-machine   ///夹子机
@@ -29,6 +27,8 @@ player   ///游艺设备
 vending-machine   ///售货机
 
 video-game-equipment   ///电玩设备
+
+blind-box  ///弹珠机（废弃）
 
 washingMachine  ///不用管废弃的
 
