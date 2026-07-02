@@ -1,31 +1,23 @@
 <template>
-  <div class="wxlogin">
-    <div class="info-list" v-if="showInfo">
-      <van-icon name="info" />
-      <p>请用支付宝或微信打开本页面</p>
+    <div class="wxlogin">
+        <div class="info-list" v-if="showInfo">
+            <van-icon name="info" />
+            <p>请用支付宝或微信打开本页面</p>
+        </div>
+        <div class="weixin-con" v-if="weixinShow">
+            <div class="bg-top">
+                <img class="img-logo" src="../static/img/login.jpg" />
+            </div>
+            <van-button class="info-btn" :disabled="disType" type="primary" @click="wxGetCode">确认登录</van-button>
+        </div>
+        <div class="bottom-tip" v-if="weixinShow">
+            本商城需要获取用户头像与昵称关联订单信息，用于支付。
+        </div>
     </div>
-    <div class="weixin-con" v-if="weixinShow">
-      <div class="bg-top">
-        <img class="img-logo" src="../static/img/login.jpg" />
-        本商城需要获取用户头像与昵称关联订单信息，用于支付。
-      </div>
-      <van-button
-        class="info-btn"
-        :disabled="disType"
-        type="primary"
-        @click="wxGetCode"
-        >确认登录</van-button
-      >
-    </div>
-  </div>
-  <van-popup
-    class="van-popup-load"
-    :overlay="false"
-    style="--van-popup-background: rgba(0, 0, 0, 0)"
-    v-model:show="showLoading"
-  >
-    <van-loading type="spinner" />
-  </van-popup>
+    <van-popup class="van-popup-load" :overlay="false" style="--van-popup-background: rgba(0, 0, 0, 0)"
+        v-model:show="showLoading">
+        <van-loading type="spinner" />
+    </van-popup>
 </template>
 <script setup>
 import { v3AuthPlayerAuthAPI } from "../api/index";
@@ -80,7 +72,7 @@ const getOpenId = async (code) => {
   if (
     starterMachineId.value == null ||
     starterMachineId.value == undefined ||
-    starterMachineId.value == "null"
+    starterMachineId.value == "null" 
   ) {
     starterMachineId.value = "";
     isButtonDisabled.value = false;
@@ -217,7 +209,16 @@ onMounted(() => {
       font-size: 0.5rem;
     }
   }
-
+    .bottom-tip {
+        position: fixed;
+        bottom: 40px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        color: #999;
+        font-size: 24px;
+        z-index: 10;
+    }
   .weixin-con {
     width: 100%;
     text-align: center;
@@ -232,7 +233,7 @@ onMounted(() => {
       font-size: 34px;
 
       .img-logo {
-        width: 15%;
+        width: 45%;
         display: block;
         margin: -2rem auto 0.3rem;
       }

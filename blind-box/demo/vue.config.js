@@ -33,3 +33,21 @@ module.exports = defineConfig({
   }
 }
 )
+
+// (function() {
+//   // 1. 机器信息，
+//   localStorage.setItem('shop_starterMachineId', 'FA7F20003775');
+//   localStorage.setItem('shop_sExtId', '0');
+  
+//   // 2. 登录 Token（注意：需要替换为你实际可用的 token）
+//   const REAL_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI5Mjc1MjAiLCJyb2xlIjoicGxheWVyIiwibmlja25hbWUiOiLmmociLCJhY3RvcnQiOiIyMDAwMzc3NSIsImp0aSI6IjMzMGE3NTE2LTZiNmMtNDk2OS05Y2UzLTcxNzU1MmRhOWQ2NiIsIm5iZiI6MTc4Mjg4NDMxNiwiZXhwIjoxNzgyOTcwNzE2LCJpYXQiOjE3ODI4ODQzMTZ9.yIAwLb49XpKzQ96zToubqkkJucgurAWJlapCQeI1xsw';
+  
+//   localStorage.setItem('clawcrane_tokenStarter', JSON.stringify({
+//     data: REAL_TOKEN,
+//     time: Date.now(),
+//     expire: 86400000  // 24小时
+//   }));
+//   localStorage.setItem('clawcrane_heardTokenStarter', REAL_TOKEN);
+  
+//   console.log('✅ 测试参数已设置，可以访问 /#/home/index 了');
+// })();

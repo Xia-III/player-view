@@ -12,7 +12,7 @@ import {
     , v3WwjPlayerCoinInPlan
 } from './v3clawMachice.js'
 import {
-    JsApiConfig
+    JsApiConfig, GetSimCardEndTimeByMachineId
 } from './v2center1.js'
 // v3paybox1相关接口：
 export const v3PlayerProfileAPI = v3PlayerProfile
@@ -42,6 +42,9 @@ export const OnlineCoinInTestAPI = OnlineCoinInTest
 
 export const JsApiConfigAPI = JsApiConfig
 export const v3PlaceOrderAPI = v3PlaceOrder
+
+// 机器SIM卡相关：
+export const GetSimCardEndTimeByMachineIdAPI = GetSimCardEndTimeByMachineId
 
 
 

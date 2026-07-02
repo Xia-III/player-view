@@ -27,6 +27,7 @@ import {
   JsApiConfig,
   GetComplaintMessagePageList,
   SaveComplaintMessage,
+  GetSimCardEndTimeByMachineId,
 } from "./v2center1.js";
 // v3paybox1相关接口：
 export const v3PlayerProfileAPI = v3PlayerProfile;
@@ -58,3 +59,6 @@ export const JsApiConfigAPI = JsApiConfig;
 export const v3PlaceOrderAPI = v3PlaceOrder;
 export const GetComplaintMessagePageListAPI = GetComplaintMessagePageList;
 export const SaveComplaintMessageAPI = SaveComplaintMessage;
+
+// 机器SIM卡相关：
+export const GetSimCardEndTimeByMachineIdAPI = GetSimCardEndTimeByMachineId

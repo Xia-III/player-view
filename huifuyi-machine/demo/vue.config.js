@@ -16,6 +16,11 @@ module.exports = defineConfig({
         target: 'https://www.huanxizn.com',
         ws: true,
         changeOrigin: true
+      },
+      '/center': {
+        target: 'https://www.huanxizn.com',
+        ws: true,
+        changeOrigin: true
       }
     }
   },
@@ -33,11 +38,11 @@ module.exports = defineConfig({
 // 访问端口，在控制台输入测试参数
 // (function() {
 //   // 1. 机器信息，
-//   localStorage.setItem('shop_starterMachineId', 'FA7F20002165');
+//   localStorage.setItem('shop_starterMachineId', 'FA7F20000910');
 //   localStorage.setItem('shop_sExtId', '0');
   
 //   // 2. 登录 Token（注意：需要替换为你实际可用的 token）
-//   const REAL_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI5Mjc1MjAiLCJyb2xlIjoicGxheWVyIiwibmlja25hbWUiOiLmmociLCJhY3RvcnQiOiIyMDAwMjE1MCIsImp0aSI6ImViMmQxYWQ5LTVlN2QtNGVkNS1hMDVkLWM4NGVkNDQwNGVlOCIsIm5iZiI6MTc4MDI5NDA3MCwiZXhwIjoxNzgwMzgwNDcwLCJpYXQiOjE3ODAyOTQwNzB9.8Exg5XvFJ1G04D9XJIn9IY1man2gs0nkXOjRfN00a9s'; // 替换成你真实的
+//   const REAL_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI5Mjc1MjAiLCJyb2xlIjoicGxheWVyIiwibmlja25hbWUiOiLmmociLCJhY3RvcnQiOiIyMDAwMDkxMCIsImp0aSI6IjZkZTk4N2U1LWRkODctNDZjMi1hNDhlLWM2ZWQxOWZkZGE0ZCIsIm5iZiI6MTc4MjgxMjEyNiwiZXhwIjoxNzgyODk4NTI2LCJpYXQiOjE3ODI4MTIxMjZ9.dKECrrmJOjaAxMs3c991MSmMt8FdmQJFxcKRdKhRvsg'; // 替换成你真实的
   
 //   localStorage.setItem('washing_tokenStarter', JSON.stringify({
 //     data: REAL_TOKEN,

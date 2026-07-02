@@ -23,3 +23,9 @@ export const SaveComplaintMessage = data => request({
     url: center + 'api/v3/ComplaintMessage/SaveComplaintMessage',
     data
 })
+
+export const GetSimCardEndTimeByMachineId = data => request({
+    method: 'POST',
+    url: center + 'api/v2/SimCardMachine/GetSimCardEndTimeByMachineId',
+    data
+})

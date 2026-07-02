@@ -9,3 +9,10 @@ export const JsApiConfig = params => request({
     url: center + 'api/v3/Player/JsApiConfig',
     params
 })
+
+// 获取sim卡过期时间
+export const GetSimCardEndTimeByMachineId = params => request({
+    method: 'Get',
+    url: center + 'api/v2/SimCardMachine/GetSimCardEndTimeByMachineId',
+    params
+})

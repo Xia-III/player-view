@@ -31,6 +31,9 @@
             </div>
 
             <button @click="onClick">扫一扫</button>
+            <div v-if="simCardExpired" style="margin-top: 20px; font-size: 15px; color: red; text-align: center;">
+                该设备流量卡到期，需要管理员进行续费
+            </div>
         </div>
         <div class="bottomBox">
             <div class="user">
@@ -57,13 +60,13 @@
         </van-popup>
     </div>
 </template>
-
+  
 <script setup>
 import { ref, reactive, watch } from 'vue';
 import { useRoute, useRouter, onBeforeRouteLeave } from "vue-router"
 
 import {
-    v3PlayerProfileAPI, JsApiConfigAPI
+    v3PlayerProfileAPI, JsApiConfigAPI, GetSimCardEndTimeByMachineIdAPI
 } from '../api/index'
 import wx from 'weixin-js-sdk'
 const offLine = ref(false)
@@ -84,6 +87,8 @@ const agencyId = ref(null)
 const name = ref('')
 const servicePhone = ref('')
 const showLoading = ref(false)
+const simCardExpired = ref(false)
+const simCardEndTime = ref('')
 
 
 // 页面创建时加载玩家数据：
@@ -106,6 +111,21 @@ const getPost = async () => {
             payCtrlMode.value = res.data.data.payCtrlMode
             agencyId.value = res.data.data.agencyId
             servicePhone.value = res.data.data.servicePhone
+
+            // 自动查询SIM卡到期时间
+            if (machineId.value) {
+                GetSimCardEndTimeByMachineIdAPI({ machineId: machineId.value }).then((simRes) => {
+                    if (simRes.data.code == 200) {
+                        const endTime = simRes.data.data.cardEndTime;
+                        simCardEndTime.value = endTime;
+                        if (endTime && new Date(endTime.replace(/-/g, '/')) < new Date()) {
+                            simCardExpired.value = true;
+                        }
+                    }
+                }).catch(() => {
+                    // 查询失败不影响页面正常展示
+                });
+            }
         } else {
             showToast(res.data.message);
         }
@@ -260,7 +280,7 @@ const getUrlParams = (val) => {
 }
 
 </script>
-
+  
 <style scoped lang="less">
 .hint {
     .topBox {
@@ -400,7 +420,7 @@ const getUrlParams = (val) => {
             line-height: 120px;
             margin-right: 50px;
             font-size: 35px;
-        }
+        } 
 
     }
 

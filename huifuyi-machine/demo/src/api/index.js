@@ -16,7 +16,7 @@ import {
     v3PlaceOrdere, v3WashingReturn, v3xdjAuthPlayerAuth, v3xdjAuthScanQRCode, v3xdjPlayerProfile
 } from "./v3washing.js"
 import {
-    JsApiConfig
+    JsApiConfig, GetSimCardEndTimeByMachineId
 } from './v2center1.js'
 // v3washing相关接口：
 export const v3PlaceOrdereAPI = v3PlaceOrdere
@@ -56,6 +56,9 @@ export const v3WwjAuthScanQRCodeAPI = v3WwjAuthScanQRCode
 // 测试投币：
 export const GetTestMachineCoinsAPI = GetTestMachineCoins
 export const OnlineCoinInTestAPI = OnlineCoinInTest
+
+// 机器SIM卡相关：
+export const GetSimCardEndTimeByMachineIdAPI = GetSimCardEndTimeByMachineId
 
 export const JsApiConfigAPI = JsApiConfig
 
