@@ -868,6 +868,12 @@ const shortUrl = ref("");
 
 // 微信扫一扫配置
 const wxConfig = (_appid, _timestamp, _nonceStr, _signature) => {
+  if (typeof wx === "undefined") {
+    showToast("微信JSSDK未加载，请刷新重试");
+    showLoading.value = false;
+    scanStatus.value = "error";
+    return;
+  }
   wx.config({
     debug: false, // 开启调试模式
     appId: _appid,
@@ -884,6 +890,7 @@ const wxConfig = (_appid, _timestamp, _nonceStr, _signature) => {
     // alert("配置验证失败: " + res.errMsg);
     showToast("配置验证失败: " + res.errMsg);
     scanStatus.value = "error";
+    showLoading.value = false;
   });
 
   wx.ready(() => {
@@ -923,6 +930,8 @@ const scanCode = async () => {
             res.data.data.nonceStr,
             res.data.data.signature
           );
+
+          showLoading.value = false;
 
           wx.scanQRCode({
             desc: "scanQRCode desc",
@@ -968,7 +977,12 @@ const scanCode = async () => {
         scanStatus.value = "error";
         showToast("配置请求失败");
       }
-    );
+    ).catch((err) => {
+      console.error("扫码初始化异常:", err);
+      showLoading.value = false;
+      scanStatus.value = "error";
+      showToast("扫码初始化失败");
+    });
   } else {
     showLoading.value = false;
     showToast("请在微信客户端打开");
