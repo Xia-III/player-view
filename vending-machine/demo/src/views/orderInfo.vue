@@ -11,7 +11,7 @@
         <div class="section-title">商品明细</div>
         <div class="goods-list">
             <div class="goods-item" v-for="(line, index) in orderData.lines" :key="index">
-                <img class="goods-pic" :src="picBaseUrl + line.picUrl" :alt="line.goodsName" />
+                <img class="goods-pic" :src="picBaseUrl + line.picUrl" :alt="line.goodsName" @error="e => e.target.src = fallbackImg" />
                 <div class="goods-info">
                     <p class="goods-name">{{ line.goodsName }}</p>
                     <p class="goods-price">¥{{ (line.unitPriceFen / 100).toFixed(2) }}</p>
@@ -52,6 +52,7 @@ const showLoading = ref(false)
 const orderData = ref({ lines: [] })
 const errorMessage = ref('')
 const picBaseUrl = 'https://www.huanxizn.com/'
+const fallbackImg = require('@/static/img/vending.jpg')
 const APPID = "wx7f23f819116cc247"
 
 const getUrlParam = (name) => {
