@@ -14,6 +14,7 @@ import TestCoin from '../views/test-coin.vue'
 import Users from '../views/users.vue'
 import CoinSuccess from '../views/coinSuccess.vue'
 import OrderInfo from '../views/orderInfo.vue'
+import NoBiz from '../views/no-biz.vue'
 
 const routes = [
   {
@@ -140,6 +141,14 @@ const routes = [
     component: Users,
     meta: {
       title: "用户会员管理"
+    }
+  },
+  {
+    path: '/noBiz',
+    name: 'noBiz',
+    component: NoBiz,
+    meta: {
+      title: "暂无线上业务"
     }
   }
 

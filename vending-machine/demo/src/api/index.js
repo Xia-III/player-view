@@ -5,7 +5,8 @@ import {
     , v3PlayerCoinIn, v3PlayerPlaceOrder
     , v3PlayerRechargeConfigList, v3PlayerRecharge,
     v3PlayerCoinList, v3PlayerChangeAddress,
-    GetTestMachineCoins, OnlineCoinInTest, VendingQrOrderInfo
+    GetTestMachineCoins, OnlineCoinInTest, VendingQrOrderInfo, MachineBizType,
+    LeaseEntry, CreateLeaseOrder, ConfirmReturn, SettleReturn
 } from './v3paybox1.js'
 import {
     v3WwjPlayerProfile, v3WwjPlayerMachineList, v3WwjAuthPlayerAuth, v3WwjAuthScanQRCode
@@ -27,6 +28,12 @@ export const v3PlayerRechargeAPI = v3PlayerRecharge
 export const v3PlayerCoinListAPI = v3PlayerCoinList
 export const v3PlayerChangeAddressAPI = v3PlayerChangeAddress
 export const VendingQrOrderInfoAPI = VendingQrOrderInfo
+export const MachineBizTypeAPI = MachineBizType
+// 外设租赁玩家接口：
+export const LeaseEntryAPI = LeaseEntry
+export const CreateLeaseOrderAPI = CreateLeaseOrder
+export const ConfirmReturnAPI = ConfirmReturn
+export const SettleReturnAPI = SettleReturn
 
 
 

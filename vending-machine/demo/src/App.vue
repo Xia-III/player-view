@@ -36,7 +36,7 @@ const getUrlParam = (name) => {
 //             if (res.code == 200) {
 //               showToast("充值成功");
 //               setTimeout(() => {
-//                 window.location.href = 'https://www.huanxizn.com/newboxes/#/toLogin'
+//                 window.location.href = 'https://www.huanxizn.com/newVending/#/toLogin'
 //               }, 100);
 //             } else {
 //               showToast(res.message);

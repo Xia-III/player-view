@@ -3,6 +3,7 @@
         <div class="middle">
             <router-view></router-view>
         </div>
+        <!-- 暂时隐藏：底部导航栏
         <van-tabbar v-model="active" @change="onChange" route class="tabbar">
             <van-tabbar-item replace to="/home/index" icon="wap-home">首页</van-tabbar-item>
             <van-tabbar-item replace to="/home/recharge" v-if="rechargeConfigList.length > 0 && isNewPage === false">
@@ -23,6 +24,7 @@
             </van-tabbar-item>
             <van-tabbar-item replace to="/home/account" icon="manager">我的</van-tabbar-item>
         </van-tabbar>
+        -->
     </div>
 </template>
 
@@ -219,6 +221,11 @@ const getUrlParams = (val) => {
 
 
 <style scoped lang="less">
+.main {
+    // 底部留出 tabbar 高度，避免内容被固定导航栏遮挡
+    padding-bottom: 140px;
+}
+
 .tabbar {
 
     // position: relative;

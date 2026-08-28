@@ -78,6 +78,37 @@ export const VendingQrOrderInfo = params => request({
     url: vending + 'api/v3/Player/VendingQrOrderInfo',
     params
 })
+// ==================== 外设租赁玩家接口(LeasePlayer) ====================
+// 扫码后查机器业务类型(MachineBizType)：区分旧售货/外设租赁
+export const MachineBizType = params => request({
+    method: 'GET',
+    url: vending + 'api/v3/LeasePlayer/MachineBizType',
+    params
+})
+// 同码借还入口(LeaseEntry)：有在租→还；无→借
+export const LeaseEntry = params => request({
+    method: 'GET',
+    url: vending + 'api/v3/LeasePlayer/LeaseEntry',
+    params
+})
+// 创建租赁订单并支付定金(CreateLeaseOrder)
+export const CreateLeaseOrder = data => request({
+    method: 'POST',
+    url: vending + 'api/v3/LeasePlayer/CreateLeaseOrder',
+    data
+})
+// 确认归还(ConfirmReturn)：通知设备按原货道行列开柜
+export const ConfirmReturn = params => request({
+    method: 'POST',
+    url: vending + 'api/v3/LeasePlayer/ConfirmReturn',
+    params
+})
+// 归还结算(SettleReturn)：暂屏蔽，由设备0x18回报触发结算
+export const SettleReturn = params => request({
+    method: 'POST',
+    url: vending + 'api/v3/LeasePlayer/SettleReturn',
+    params
+})
 
 
 // 测试投币：
@@ -93,3 +124,5 @@ export const OnlineCoinInTest = params => request({
     url: vending + 'api/OnlineCoinInTest',
     params
 })
+
+

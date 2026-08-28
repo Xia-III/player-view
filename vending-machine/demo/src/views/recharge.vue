@@ -96,7 +96,7 @@ const onshowShop = async (item) => {
         rechargeType: 0,  //充值币
         extMode: extId.value,  //充值分支号
         rechargeDataSource: 0, //0默认充值  1及充启动
-        frontUrl: 'https://www.huanxizn.com/newboxes/#/home/index' //支付完成后，前端跳转地址
+        frontUrl: 'https://www.huanxizn.com/newVending/#/home/index' //支付完成后，前端跳转地址
     }).then((res) => {
         showLoading.value = false;
         console.log(res.data);

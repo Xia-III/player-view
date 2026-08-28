@@ -62,35 +62,38 @@ const getDataFee = async () => {
             localStorage.setItem('shop_sFee', 0);
         }
     }
-    showLoading.value = true;
-    await v3AuthScanQRCodeAPI({
-        machineId: starterMachineId.value.substring(4)
-    }).then((res) => {
-        showLoading.value = false;
-        console.log(res.data, "跳转页面");
-        if (res.data.code == 200) {
-            window.location.href = res.data.data + '/index.html#/login'
-            // router.push({
-            //     path: '/login'
-            // })
-            console.log('进入投币页面');
-        } else if (res.data.code == 201) {
-            console.log('进入测试页面');
-            window.location.href = res.data.data + '/index.html#/testCoin'
-            // router.push({
-            //     path: '/testCoin'
-            // })
-        } else if (res.data.code == 202) {
-            showToast('该场地已被禁用，请联系工作人员');
-        }  else {
-            showToast(res.data.message);
-        }
-    }).catch((error) => {
-        showLoading.value = false;
-        router.push({
-            path: '/login'
-        });
-    });
+    router.push({
+        path: '/login'
+    })
+    // showLoading.value = true;
+    // await v3AuthScanQRCodeAPI({
+    //     machineId: starterMachineId.value.substring(4)
+    // }).then((res) => {
+    //     showLoading.value = false;
+    //     console.log(res.data, "跳转页面");
+    //     if (res.data.code == 200) {
+    //         window.location.href = res.data.data + '/index.html#/login'
+    //         // router.push({
+    //         //     path: '/login'
+    //         // })
+    //         console.log('进入投币页面');
+    //     } else if (res.data.code == 201) {
+    //         console.log('进入测试页面');
+    //         window.location.href = res.data.data + '/index.html#/testCoin'
+    //         // router.push({
+    //         //     path: '/testCoin'
+    //         // })
+    //     } else if (res.data.code == 202) {
+    //         showToast('该场地已被禁用，请联系工作人员');
+    //     }  else {
+    //         showToast(res.data.message);
+    //     }
+    // }).catch((error) => {
+    //     showLoading.value = false;
+    //     router.push({
+    //         path: '/login'
+    //     });
+    // });
 }
 
 const getUrlParams = () => {

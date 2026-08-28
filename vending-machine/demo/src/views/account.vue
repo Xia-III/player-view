@@ -13,13 +13,13 @@
         </ul>
     </div>
     <div>
-        <van-cell title="币详情" size="large" value="可切换当前场地" @click="toAddress()" is-link>
+        <!-- <van-cell title="币详情" size="large" value="可切换当前场地" @click="toAddress()" is-link>
             <template #icon>
                 <div>
                     <van-icon :style="{ color: 'red', fontSize: '26px', marginRight: '10px' }" name="shop-collect" />
                 </div>
             </template>
-        </van-cell>
+        </van-cell> -->
         <van-cell title="充值记录" size="large" is-link @click="toRechargeRecord">
             <template #icon>
                 <div>

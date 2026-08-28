@@ -1,6 +1,7 @@
 <template>
     <div>
         <div class="user">
+            <!-- 暂时隐藏：顶部机器信息栏
             <div class="topmachine" @click="showchooseM">
                 <p class="id">ID :{{ agencyId }}</p>
                 <p>{{ (remark == null || remark == '') ? '普通机器' : remark
@@ -13,22 +14,17 @@
                     <van-icon :name="arrowicon" />
                 </div>
             </div>
-            <ul>
-                <li>
-                    <img :src="avatar" alt="">
-                    <div>
-                        <p>会员：{{ playerId }}</p>
-                        <p>场地：{{ addressName }}</p>
-                    </div>
-                    <div v-if="isCoin == false">
-                        <p class="yellow">余额：{{ coins / 100 }}</p>
-                        <p>币数：{{ coinsBind / coinFee }}</p>
-                    </div>
-                    <div v-else>
-                        <p class="yellow">余币：{{ Math.floor((coins + coinsBind) / 100) }}</p>
-                    </div>
-                </li>
-            </ul>
+            -->
+            <div class="userCard">
+                <img :src="avatar" alt="">
+                <div class="info">
+                    <p class="playerId">会员：{{ playerId }}</p>
+                    <p class="address">场地：{{ addressName }}</p>
+                </div>
+                <div class="coins" v-if="isCoin == true">
+                    <p class="yellow">余币：{{ Math.floor((coins + coinsBind) / 100) }}</p>
+                </div>
+            </div>
         </div>
         <van-popup class="showmachine" @click-overlay="arrowicon = 'arrow-down'" v-model:show="showBottom"
             position="bottom" :style="{ height: '50%' }">
@@ -47,8 +43,45 @@
                 </van-cell-group>
             </van-radio-group>
         </van-popup>
+        <!-- 外设租赁：借/还 -->
+        <div class="leaseBox" v-if="leaseMode !== ''">
+            <!-- 借：可租目录网格 -->
+            <div v-if="leaseMode === 'borrow'">
+                <div class="cheap">
+                    <span>选择要租赁的设备</span>
+                </div>
+                <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
+                    <div class="leaseGrid" v-if="leaseAisles.length > 0">
+                        <div class="leaseItem" v-for="item in leaseAisles" :key="item.leaseAisleId"
+                            :class="{ occupied: item.occupied }"
+                            @click="onLeaseAisle(item)">
+                            <img :src="item.picUrl || zuLinImg" @error="handleImgError" alt="">
+                            <p class="goodsName">{{ item.goodsName }}</p>
+                            <p class="rent">￥{{ toyuan(item.rentPricePerMinute) }}/分钟</p>
+                            <p class="deposit">定金￥{{ toyuan(item.depositFee) }}</p>
+                        </div>
+                    </div>
+                    <div class="null" v-else>暂无可租设备</div>
+                </van-pull-refresh>
+            </div>
+            <!-- 还：在租订单 -->
+            <div v-else-if="leaseMode === 'return' && leaseOrder">
+                <div class="cheap">
+                    <span>当前租赁中</span>
+                </div>
+                <div class="leaseOrder">
+                    <img :src="leaseOrder.picUrl || zuLinImg" @error="handleImgError" alt="">
+                    <p class="goodsName">{{ leaseOrder.goodsName }}</p>
+                    <p>货道：{{ leaseOrder.row }}行{{ leaseOrder.col }}列</p>
+                    <p>租金：￥{{ toyuan(leaseOrder.rentPricePerMinute) }}/分钟</p>
+                    <p>定金：￥{{ toyuan(leaseOrder.depositFee) }}</p>
+                    <p>开始时间：{{ leaseOrder.startTime }}</p>
+                </div>
+                <button class="returnBtn" @click="onConfirmReturn">确认归还</button>
+            </div>
+        </div>
         <!-- 旧页面投币启动 -->
-        <div class="main" v-if="isNewPage === false">
+        <div class="main" v-if="isNewPage === false && leaseMode === ''">
             <!-- <div class="coinPlan" v-if="coinInPlanList.length > 0" v-for="item in coinInPlanList"
                 :key="item.coinInPlanId" @click="onInsertCoins(item, playerProfile)">
                 <div class="coinPlan">
@@ -71,7 +104,7 @@
 
         </div>
         <!-- 新页面投币启动 -->
-        <div class="gameLaunch" v-if="isNewPage === true">
+        <div class="gameLaunch" v-if="isNewPage === true && leaseMode === ''">
             <div class="cheap">
                 <span>投币启动</span>
             </div>
@@ -88,7 +121,7 @@
             </div>
         </div>
         <!-- 新页面套餐充值 -->
-        <div class="bigBox" v-if="isNewPage === true">
+        <div class="bigBox" v-if="isNewPage === true && leaseMode === ''">
             <div class="cheap">
                 <span>套餐充值</span>
             </div>
@@ -128,7 +161,7 @@
         </van-popup>
     </div>
     <div style="position: fixed;right: 10px;bottom: 20%; text-align: center;">
-        <img src="static/img/kefu.png" style="width:40px;height:auto;" @click="toKefu">
+        <img src="../static/img/kefu.png" style="width:40px;height:auto;" @click="toKefu">
         <p style="color: #666; font-size: 13px; text-align: center;">客服电话</p>
     </div>
     <van-popup class="van-popup-load" :overlay="false" style="--van-popup-background: rgba(0, 0, 0, 0)"
@@ -141,10 +174,12 @@ import { ref, reactive, watch, onMounted } from 'vue';
 import { useRoute, useRouter, onBeforeRouteLeave } from "vue-router"
 import { showToast, showDialog, showConfirmDialog } from 'vant'
 import {
-    v3PlayerProfileAPI, v3PlayerCoinInPlanAPI,
-    v3PlayerMachineListAPI, v3PlayerCoinInAPI,
-    v3PlayerPlaceOrderAPI, v3PlayerRechargeConfigListAPI
+    v3PlayerProfileAPI, v3PlayerMachineListAPI,
+    v3PlayerCoinInAPI, v3PlayerPlaceOrderAPI,
+    v3PlayerRechargeConfigListAPI,
+    LeaseEntryAPI, CreateLeaseOrderAPI, ConfirmReturnAPI
 } from '../api/index'
+import zuLinImg from '../static/img/ZuLin.jpg'
 const router = useRouter()
 const route = useRoute()
 const showLoading = ref(false)
@@ -173,6 +208,14 @@ const name = ref('')
 const servicePhone = ref('')
 const isNewPage = ref(false) // 判断是否为新页面
 const isCoin = ref(false) // 判断是否为充币
+// 外设租赁相关：
+const leaseMode = ref('') // 'borrow'借 / 'return'还
+const leaseAisles = ref([]) // 全部货道
+const leaseOrder = ref(null) // 在租订单
+// 租赁商品图片加载失败时使用默认图：
+const handleImgError = (e) => {
+    e.target.src = zuLinImg
+}
 
 
 const toKefu = () => {
@@ -219,7 +262,7 @@ const getPost = async () => {
             agencyId.value = res.data.data.agencyId
             servicePhone.value = res.data.data.servicePhone
             name.value = res.data.data.name
-            getCoinInPlan(res.data.data.addressId)
+            getLeaseEntry(res.data.data.machineId)
         } else {
             showToast(res.data.message);
         }
@@ -260,24 +303,124 @@ const getRecharge = async () => {
 }
 
 
-// 页面创建时加载投币列表数据：
+// 页面创建时加载租赁入口数据：
 const coinInPlanList = ref([])
-const getCoinInPlan = async (addressId) => {
-    showLoading.value = true;
-    await v3PlayerCoinInPlanAPI({
-        addressId: addressId
+const getLeaseEntry = async (machineId, withLoading = true) => {
+    if (withLoading) showLoading.value = true;
+    await LeaseEntryAPI({
+        machineId: machineId
     }).then((res) => {
-        showLoading.value = false;
+        if (withLoading) showLoading.value = false;
         if (res.data.code == 200) {
-            console.log(res.data, 'wanjiazhitou');
-            coinInPlanList.value = res.data.data
-
+            const data = res.data.data
+            const order = data.order || null
+            leaseOrder.value = order
+            if (order) {
+                // 有在租订单：优先显示订单
+                leaseMode.value = 'return'
+            } else {
+                // 无在租订单：显示可租设备列表
+                leaseMode.value = 'borrow'
+                leaseAisles.value = data.aisles || []
+            }
         } else {
             showToast(res.data.message);
         }
     }).catch((error) => {
-        // showLoading.value = false;
-
+        if (withLoading) showLoading.value = false;
+    });
+}
+// 下拉刷新租赁设备列表：
+const refreshing = ref(false)
+const onRefresh = () => {
+    getLeaseEntry(machineId.value, false).finally(() => {
+        refreshing.value = false;
+    });
+}
+// 点击货道：先弹确认框，确认后创建租赁订单：
+const onLeaseAisle = (item) => {
+    if (item.occupied) {
+        showToast('设备已经借租，请选择其他设备');
+        return;
+    }
+    showConfirmDialog({
+        title: '租赁确认',
+        message:
+            '<div style="line-height: 26px;">' +
+            '<div>商品：' + item.goodsName + '</div>' +
+            '<div>定金：<span style="color:#d00d02;">￥' + toyuan(item.depositFee) + '</span></div>' +
+            '<div>租金：<span style="color:#d00d02;">￥' + toyuan(item.rentPricePerMinute) + '/分钟</span></div>' +
+            '</div>',
+        allowHtml: true
+    }).then(() => {
+        createLeaseOrder(item)
+    }).catch(() => {
+        // 用户取消
+    });
+}
+// 创建租赁订单：
+const createLeaseOrder = async (item) => {
+    showLoading.value = true;
+    await CreateLeaseOrderAPI({
+        machineId: machineId.value,
+        leaseAisleId: item.leaseAisleId,
+        frontUrl: 'https://www.huanxizn.com/newVending/#/home/index'
+    }).then((res) => {
+        showLoading.value = false;
+        if (res.data.code == 200) {
+            location.href = res.data.data.payUrl
+        } else {
+            showToast(res.data.message);
+        }
+    }).catch((error) => {
+        showLoading.value = false;
+    });
+}
+// 点击确认归还：先提示放回原行列：
+const onConfirmReturn = () => {
+    const order = leaseOrder.value
+    showConfirmDialog({
+        title: '归还确认',
+        message: '请将「' + order.goodsName + '」放回 ' + order.row + ' 行 ' + order.col + ' 列货道',
+        confirmButtonText: '已放回',
+        cancelButtonText: '取消'
+    }).then(() => {
+        confirmReturn()
+    }).catch(() => {
+        // 用户取消
+    });
+}
+// 调归还接口并展示结算明细：
+const confirmReturn = async () => {
+    showLoading.value = true;
+    await ConfirmReturnAPI({
+        machineId: machineId.value
+    }).then((res) => {
+        showLoading.value = false;
+        if (res.data.code == 200) {
+            const data = res.data.data || {}
+            let msg = data.message || '归还已处理'
+            if (data.rentMinutes != null) {
+                msg += '<br/>租用时长：' + data.rentMinutes + ' 分钟'
+            }
+            if (data.rentFee != null) {
+                msg += '<br/>租金：￥' + toyuan(data.rentFee)
+            }
+            if (data.refundFee != null) {
+                msg += '<br/>退还定金：￥' + toyuan(data.refundFee)
+            }
+            showDialog({
+                title: '归还成功',
+                message: msg,
+                allowHtml: true
+            }).then(() => {
+                getPost()
+            });
+        } else {
+            showToast(res.data.message);
+        }
+    }).catch((error) => {
+        showLoading.value = false;
     });
 }
 
@@ -395,7 +538,7 @@ const onInsertCoins = async (item) => {
                         rechargeType: 0,//充值币
                         extMode: extId.value,//充值分支号
                         rechargeDataSource: 1,//0默认充值  1及充启动
-                        frontUrl: 'https://www.huanxizn.com/newboxes/#/home/index'//支付完成后，前端跳转地址
+                        frontUrl: 'https://www.huanxizn.com/newVending/#/home/index'//支付完成后，前端跳转地址
                     }).then((res) => {
                         showLoading.value = false;
                         if (res.data.code == 200) {
@@ -471,7 +614,7 @@ const onInsertCoins = async (item) => {
                 rechargeType: 0,//充值币
                 extMode: extId.value,//充值分支号
                 rechargeDataSource: 1,//0默认充值  1及充启动
-                frontUrl: 'https://www.huanxizn.com/newboxes/#/home/index'//支付完成后，前端跳转地址
+                frontUrl: 'https://www.huanxizn.com/newVending/#/home/index'//支付完成后，前端跳转地址
             }).then((res) => {
                 showLoading.value = false;
                 if (res.data.code == 200) {
@@ -729,7 +872,7 @@ const onInsertCoin = (item) => {
                         rechargeType: 0,//充值币
                         extMode: extId.value,//充值分支号
                         rechargeDataSource: 1,//0默认充值  1及充启动
-                        frontUrl: 'https://www.huanxizn.com/newboxes/#/home/index'//支付完成后，前端跳转地址
+                        frontUrl: 'https://www.huanxizn.com/newVending/#/home/index'//支付完成后，前端跳转地址
                     }).then((res) => {
                         showLoading.value = false;
                         if (res.data.code == 200) {
@@ -809,7 +952,7 @@ const onInsertCoin = (item) => {
                         rechargeType: 0,//充值币
                         extMode: extId.value,//充值分支号
                         rechargeDataSource: 1,//0默认充值  1及充启动
-                        frontUrl: 'https://www.huanxizn.com/newboxes/#/home/index'//支付完成后，前端跳转地址
+                        frontUrl: 'https://www.huanxizn.com/newVending/#/home/index'//支付完成后，前端跳转地址
                     }).then((res) => {
                         showLoading.value = false;
                         if (res.data.code == 200) {
@@ -843,7 +986,7 @@ const onshowShop = async (item) => {
         rechargeType: 0,  //充值币
         extMode: extId.value,  //充值分支号
         rechargeDataSource: 0, //0默认充值  1及充启动
-        frontUrl: 'https://www.huanxizn.com/newboxes/#/home/index' //支付完成后，前端跳转地址
+        frontUrl: 'https://www.huanxizn.com/newVending/#/home/index' //支付完成后，前端跳转地址
     }).then((res) => {
         showLoading.value = false;
         console.log(res.data);
@@ -942,12 +1085,7 @@ watch(        //监测路由id的变化
 .user {
     margin: 0px 0px 20px 0px;
     width: 100%;
-    height: 260px;
-    background: url(../static/img/top.png) no-repeat;
-    background-size: 100% 100%;
-    // border-radius: 20px;
-    color: #fff;
-    padding-top: 30px;
+    padding: 20px;
 
     .topmachine {
         width: 90%;
@@ -981,50 +1119,51 @@ watch(        //监测路由id的变化
         }
     }
 
-    ul {
+    // 会员信息卡片
+    .userCard {
+        background-color: #fff;
+        border-radius: 15px;
+        padding: 30px;
         display: flex;
-        justify-content: space-between;
-        position: relative;
+        align-items: center;
 
-        li {
-            margin: 15px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 26px;
+        img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
 
-            div {
-                margin: 15px 50px 0 10px;
+        .info {
+            flex: 1;
+            margin-left: 25px;
 
-                p {
-                    margin: 10px 10px 18px 10px;
-                }
+            p {
+                font-size: 28px;
+                color: #333;
+                margin: 10px 0;
             }
 
-            .yellow {
-                color: #fff000;
+            .playerId {
+                font-size: 34px;
+                font-weight: 600;
+                color: #1989fa;
+            }
+
+            .address {
+                color: #757575;
             }
         }
 
-        // .van-button {
-        //     position: absolute;
-        //     width: 260px;
-        //     height: 120px;
-        //     right: 10px;
-        //     top: 40px;
-        //     // background-color: linear-gradient(to right, #ff6034, #ee0a24);
-        //     color: #000;
-        // }
+        .coins {
+            flex-shrink: 0;
 
-
-    }
-
-    img {
-        width: 120px;
-        height: 120px;
-        margin-left: 20px;
-        margin-right: 0px;
-        border-radius: 50%;
-        vertical-align: middle;
+            .yellow {
+                font-size: 30px;
+                color: #d00d02;
+                font-weight: 600;
+            }
+        }
     }
 }
 
@@ -1366,6 +1505,128 @@ watch(        //监测路由id的变化
     }
 }
 
+
+.leaseBox {
+    background-color: #fff;
+    margin-top: 3%;
+    padding: 30px;
+    width: 85%;
+    margin-left: 4%;
+    border-radius: 15px;
+
+    .cheap {
+        span {
+            font-size: 40px;
+            border-bottom: 1px solid rgb(82, 177, 255);
+            text-align: center;
+            color: rgb(82, 177, 255);
+            font-weight: 600;
+        }
+    }
+
+    .null {
+        text-align: center;
+        line-height: 100px;
+        font-size: 28px;
+        color: #969799;
+    }
+
+    .leaseGrid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 15px;
+
+        .leaseItem {
+            border: 2px solid rgb(93, 195, 255);
+            border-radius: 15px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            img {
+                width: 90px;
+                height: 90px;
+                border-radius: 10px;
+            }
+
+            .goodsName {
+                font-size: 26px;
+                font-weight: 600;
+                margin-top: 8px;
+                color: #000;
+            }
+
+            .rent {
+                font-size: 24px;
+                color: #d00d02;
+                font-weight: 600;
+                margin-top: 6px;
+            }
+
+            .deposit {
+                font-size: 22px;
+                color: #757575;
+                margin-top: 6px;
+            }
+        }
+
+        // 被他人借租的货道：灰色显示
+        .leaseItem.occupied {
+            background-color: #f5f5f5;
+            border-color: #dcdcdc;
+
+            img {
+                filter: grayscale(100%);
+            }
+
+            .goodsName,
+            .rent,
+            .deposit {
+                color: #bbb;
+            }
+        }
+    }
+
+    .leaseOrder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+
+        img {
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+        }
+
+        p {
+            font-size: 30px;
+            margin-top: 15px;
+        }
+
+        .goodsName {
+            font-weight: 600;
+            font-size: 34px;
+        }
+    }
+
+    .returnBtn {
+        margin-top: 30px;
+        width: 400px;
+        height: 80px;
+        border: none;
+        border-radius: 30px;
+        background-color: rgb(251, 83, 34);
+        color: #fff;
+        font-size: 30px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
 
 .title {
     display: flex;

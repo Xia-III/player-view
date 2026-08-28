@@ -83,7 +83,7 @@ const activeMachine = (item) => {
                     message: '<span style="color: rgb(233, 70, 70);">要立即重新登录切换当前地址才能生效！</span>',
                     allowHtml: true
                 }).then(() => {
-                    location.href = `https://www.huanxizn.com/newboxes/#/login/?machineId=null&extId=0`;
+                    location.href = `https://www.huanxizn.com/newVending/#/login/?machineId=null&extId=0`;
                 });
 
             } else {
