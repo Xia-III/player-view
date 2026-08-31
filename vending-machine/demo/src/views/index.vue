@@ -43,42 +43,25 @@
                 </van-cell-group>
             </van-radio-group>
         </van-popup>
-        <!-- 外设租赁：借/还 -->
+        <!-- 外设租赁：借 -->
         <div class="leaseBox" v-if="leaseMode !== ''">
-            <!-- 借：可租目录网格 -->
-            <div v-if="leaseMode === 'borrow'">
-                <div class="cheap">
-                    <span>选择要租赁的设备</span>
-                </div>
-                <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
-                    <div class="leaseGrid" v-if="leaseAisles.length > 0">
-                        <div class="leaseItem" v-for="item in leaseAisles" :key="item.leaseAisleId"
-                            :class="{ occupied: item.occupied }"
-                            @click="onLeaseAisle(item)">
-                            <img :src="item.picUrl || zuLinImg" @error="handleImgError" alt="">
-                            <p class="goodsName">{{ item.goodsName }}</p>
-                            <p class="rent">￥{{ toyuan(item.rentPricePerMinute) }}/分钟</p>
-                            <p class="deposit">定金￥{{ toyuan(item.depositFee) }}</p>
-                        </div>
+            <div class="cheap">
+                <span>选择要租赁的设备</span>
+            </div>
+            <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
+                <div class="leaseGrid" v-if="leaseAisles.length > 0">
+                    <div class="leaseItem" v-for="item in leaseAisles" :key="item.leaseAisleId"
+                        :class="{ occupied: item.occupied }"
+                        @click="onLeaseAisle(item)">
+                        <span v-if="item.aisleName" class="aisleName">{{ item.aisleName }}</span>
+                        <img :src="item.picUrl || zuLinImg" @error="handleImgError" alt="">
+                        <p class="goodsName">{{ item.goodsName }}</p>
+                        <p class="rent">￥{{ toyuan(item.rentPricePerMinute) }}/分钟</p>
+                        <p class="deposit">定金￥{{ toyuan(item.depositFee) }}</p>
                     </div>
-                    <div class="null" v-else>暂无可租设备</div>
-                </van-pull-refresh>
-            </div>
-            <!-- 还：在租订单 -->
-            <div v-else-if="leaseMode === 'return' && leaseOrder">
-                <div class="cheap">
-                    <span>当前租赁中</span>
                 </div>
-                <div class="leaseOrder">
-                    <img :src="leaseOrder.picUrl || zuLinImg" @error="handleImgError" alt="">
-                    <p class="goodsName">{{ leaseOrder.goodsName }}</p>
-                    <p>货道：{{ leaseOrder.row }}行{{ leaseOrder.col }}列</p>
-                    <p>租金：￥{{ toyuan(leaseOrder.rentPricePerMinute) }}/分钟</p>
-                    <p>定金：￥{{ toyuan(leaseOrder.depositFee) }}</p>
-                    <p>开始时间：{{ leaseOrder.startTime }}</p>
-                </div>
-                <button class="returnBtn" @click="onConfirmReturn">确认归还</button>
-            </div>
+                <div class="null" v-else>暂无可租设备</div>
+            </van-pull-refresh>
         </div>
         <!-- 旧页面投币启动 -->
         <div class="main" v-if="isNewPage === false && leaseMode === ''">
@@ -168,6 +151,11 @@
         v-model:show="showLoading">
         <van-loading type="spinner" />
     </van-popup>
+    <!-- 底部导航：借 / 还 -->
+    <van-tabbar route v-if="leaseMode !== ''">
+        <van-tabbar-item replace to="/home/index" icon="shop-o">租借</van-tabbar-item>
+        <van-tabbar-item replace to="/home/leaseReturn" icon="logistics">归还</van-tabbar-item>
+    </van-tabbar>
 </template>
 <script setup>
 import { ref, reactive, watch, onMounted } from 'vue';
@@ -177,7 +165,7 @@ import {
     v3PlayerProfileAPI, v3PlayerMachineListAPI,
     v3PlayerCoinInAPI, v3PlayerPlaceOrderAPI,
     v3PlayerRechargeConfigListAPI,
-    LeaseEntryAPI, CreateLeaseOrderAPI, ConfirmReturnAPI
+    LeaseEntryAPI, CreateLeaseOrderAPI
 } from '../api/index'
 import zuLinImg from '../static/img/ZuLin.jpg'
 const router = useRouter()
@@ -209,9 +197,8 @@ const servicePhone = ref('')
 const isNewPage = ref(false) // 判断是否为新页面
 const isCoin = ref(false) // 判断是否为充币
 // 外设租赁相关：
-const leaseMode = ref('') // 'borrow'借 / 'return'还
+const leaseMode = ref('') // ''非租赁机器 / 'borrow'借
 const leaseAisles = ref([]) // 全部货道
-const leaseOrder = ref(null) // 在租订单
 // 租赁商品图片加载失败时使用默认图：
 const handleImgError = (e) => {
     e.target.src = zuLinImg
@@ -313,16 +300,9 @@ const getLeaseEntry = async (machineId, withLoading = true) => {
         if (withLoading) showLoading.value = false;
         if (res.data.code == 200) {
             const data = res.data.data
-            const order = data.order || null
-            leaseOrder.value = order
-            if (order) {
-                // 有在租订单：优先显示订单
-                leaseMode.value = 'return'
-            } else {
-                // 无在租订单：显示可租设备列表
-                leaseMode.value = 'borrow'
-                leaseAisles.value = data.aisles || []
-            }
+            // 借：显示可租设备列表（归还已拆分到独立页面）
+            leaseMode.value = 'borrow'
+            leaseAisles.value = data.aisles || []
         } else {
             showToast(res.data.message);
         }
@@ -376,54 +356,6 @@ const createLeaseOrder = async (item) => {
         showLoading.value = false;
     });
 }
-// 点击确认归还：先提示放回原行列：
-const onConfirmReturn = () => {
-    const order = leaseOrder.value
-    showConfirmDialog({
-        title: '归还确认',
-        message: '请将「' + order.goodsName + '」放回 ' + order.row + ' 行 ' + order.col + ' 列货道',
-        confirmButtonText: '已放回',
-        cancelButtonText: '取消'
-    }).then(() => {
-        confirmReturn()
-    }).catch(() => {
-        // 用户取消
-    });
-}
-// 调归还接口并展示结算明细：
-const confirmReturn = async () => {
-    showLoading.value = true;
-    await ConfirmReturnAPI({
-        machineId: machineId.value
-    }).then((res) => {
-        showLoading.value = false;
-        if (res.data.code == 200) {
-            const data = res.data.data || {}
-            let msg = data.message || '归还已处理'
-            if (data.rentMinutes != null) {
-                msg += '<br/>租用时长：' + data.rentMinutes + ' 分钟'
-            }
-            if (data.rentFee != null) {
-                msg += '<br/>租金：￥' + toyuan(data.rentFee)
-            }
-            if (data.refundFee != null) {
-                msg += '<br/>退还定金：￥' + toyuan(data.refundFee)
-            }
-            showDialog({
-                title: '归还成功',
-                message: msg,
-                allowHtml: true
-            }).then(() => {
-                getPost()
-            });
-        } else {
-            showToast(res.data.message);
-        }
-    }).catch((error) => {
-        showLoading.value = false;
-    });
-}
-
 // 点击加载机器列表
 const showBottom = ref(false)
 const machineList = ref([])
@@ -1509,6 +1441,7 @@ watch(        //监测路由id的变化
 .leaseBox {
     background-color: #fff;
     margin-top: 3%;
+    margin-bottom: 100px;
     padding: 30px;
     width: 85%;
     margin-left: 4%;
@@ -1538,6 +1471,7 @@ watch(        //监测路由id的变化
         margin-top: 15px;
 
         .leaseItem {
+            position: relative;
             border: 2px solid rgb(93, 195, 255);
             border-radius: 15px;
             padding: 12px;
@@ -1545,6 +1479,21 @@ watch(        //监测路由id的变化
             flex-direction: column;
             align-items: center;
             justify-content: center;
+
+            .aisleName {
+                position: absolute;
+                top: 6px;
+                left: 6px;
+                max-width: 70%;
+                padding: 2px 8px;
+                font-size: 20px;
+                color: #fff;
+                background-color: rgb(93, 195, 255);
+                border-radius: 10px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
 
             img {
                 width: 90px;
@@ -1587,45 +1536,14 @@ watch(        //监测路由id的变化
             .deposit {
                 color: #bbb;
             }
+
+            .aisleName {
+                background-color: #dcdcdc;
+                color: #999;
+            }
         }
     }
 
-    .leaseOrder {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-top: 20px;
-
-        img {
-            width: 150px;
-            height: 150px;
-            border-radius: 10px;
-        }
-
-        p {
-            font-size: 30px;
-            margin-top: 15px;
-        }
-
-        .goodsName {
-            font-weight: 600;
-            font-size: 34px;
-        }
-    }
-
-    .returnBtn {
-        margin-top: 30px;
-        width: 400px;
-        height: 80px;
-        border: none;
-        border-radius: 30px;
-        background-color: rgb(251, 83, 34);
-        color: #fff;
-        font-size: 30px;
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-    }
 }
 
 .title {

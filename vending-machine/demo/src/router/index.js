@@ -15,6 +15,7 @@ import Users from '../views/users.vue'
 import CoinSuccess from '../views/coinSuccess.vue'
 import OrderInfo from '../views/orderInfo.vue'
 import NoBiz from '../views/no-biz.vue'
+import LeaseReturn from '../views/lease-return.vue'
 
 const routes = [
   {
@@ -78,16 +79,24 @@ const routes = [
           title: "账户"
         }
       },
-      {
-        path: 'recharge',
-        name: 'recharge',
-        component: Recharge,
-        meta: {
-          title: "充值"
+        {
+            path: 'recharge',
+            name: 'recharge',
+            component: Recharge,
+            meta: {
+                title: "充值"
+            }
+        },
+        {
+            path: 'leaseReturn',
+            name: 'leaseReturn',
+            component: LeaseReturn,
+            meta: {
+                title: "归还设备"
+            }
         }
-      }
     ]
-  },
+},
   {
     path: '/addressShop/:addressId/:coinFee',
     name: 'addressShop',
