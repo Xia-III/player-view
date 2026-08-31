@@ -1,27 +1,29 @@
 <template>
     <div class="leaseReturn">
-        <!-- 有在租订单：显示订单列表 + 归还 -->
-        <div class="leaseBox" v-if="leaseOrders.length > 0">
-            <div class="cheap">
-                <span>当前租赁中</span>
+        <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
+            <!-- 有在租订单：显示订单列表 + 归还 -->
+            <div class="leaseBox" v-if="leaseOrders.length > 0">
+                <div class="cheap">
+                    <span>当前租赁中</span>
+                </div>
+                <div class="leaseOrder" v-for="(order, index) in leaseOrders" :key="index">
+                    <img :src="order.picUrl || zuLinImg" @error="handleImgError" alt="">
+                    <p class="goodsName">{{ order.goodsName }}</p>
+                    <p>货道：{{ order.aisleName }}</p>
+                    <p>租金：￥{{ toyuan(order.rentPricePerMinute) }}/分钟</p>
+                    <p>定金：￥{{ toyuan(order.depositFee) }}</p>
+                    <p>开始时间：{{ order.startTime }}</p>
+                    <button class="returnBtn" @click="onConfirmReturn(order)">确认归还</button>
+                </div>
             </div>
-            <div class="leaseOrder" v-for="(order, index) in leaseOrders" :key="index">
-                <img :src="order.picUrl || zuLinImg" @error="handleImgError" alt="">
-                <p class="goodsName">{{ order.goodsName }}</p>
-                <p>货道：{{ order.row }}行{{ order.col }}列</p>
-                <p>租金：￥{{ toyuan(order.rentPricePerMinute) }}/分钟</p>
-                <p>定金：￥{{ toyuan(order.depositFee) }}</p>
-                <p>开始时间：{{ order.startTime }}</p>
-                <button class="returnBtn" @click="onConfirmReturn(order)">确认归还</button>
+            <!-- 无在租订单：空状态 -->
+            <div class="leaseBox" v-else>
+                <div class="null">
+                    <img :src="zuLinImg" alt="">
+                    <p>当前暂无在租设备</p>
+                </div>
             </div>
-        </div>
-        <!-- 无在租订单：空状态 -->
-        <div class="leaseBox" v-else>
-            <div class="null">
-                <img :src="zuLinImg" alt="">
-                <p>当前暂无在租设备</p>
-            </div>
-        </div>
+        </van-pull-refresh>
         <!-- 去借设备 -->
         <button class="goBorrow" @click="goBorrow">去借设备</button>
 
@@ -49,6 +51,7 @@ const router = useRouter()
 const showLoading = ref(false)
 const leaseOrders = ref([])
 const machineId = ref('')
+const refreshing = ref(false)
 
 // 租赁商品图片加载失败时使用默认图：
 const handleImgError = (e) => {
@@ -72,18 +75,26 @@ const getPost = async () => {
 }
 
 // 查询在租订单：
-const getLeaseEntry = async (id) => {
+const getLeaseEntry = async (id, withLoading = true) => {
+    if (withLoading) showLoading.value = true;
     await LeaseEntryAPI({
         machineId: id
     }).then((res) => {
-        showLoading.value = false;
+        if (withLoading) showLoading.value = false;
         if (res.data.code == 200) {
-            leaseOrders.value = res.data.data.order || []
+            leaseOrders.value = res.data.data.orders || []
         } else {
             showToast(res.data.message);
         }
     }).catch((error) => {
-        showLoading.value = false;
+        if (withLoading) showLoading.value = false;
+    });
+}
+
+// 下拉刷新在租订单：
+const onRefresh = () => {
+    getLeaseEntry(machineId.value, false).finally(() => {
+        refreshing.value = false;
     });
 }
 
@@ -91,21 +102,22 @@ const getLeaseEntry = async (id) => {
 const onConfirmReturn = (order) => {
     showConfirmDialog({
         title: '归还确认',
-        message: '请将「' + order.goodsName + '」放回 ' + order.row + ' 行 ' + order.col + ' 列货道',
+        message: '请将「' + order.goodsName + '」放回 ' + order.aisleName + ' 货道',
         confirmButtonText: '已放回',
         cancelButtonText: '取消'
     }).then(() => {
-        confirmReturn()
+        confirmReturn(order)
     }).catch(() => {
         // 用户取消
     });
 }
 
 // 调归还接口并展示结算明细：
-const confirmReturn = async () => {
+const confirmReturn = async (order) => {
     showLoading.value = true;
     await ConfirmReturnAPI({
-        machineId: machineId.value
+        machineId: machineId.value,
+        leaseOrderIds: [order.leaseOrderId]
     }).then((res) => {
         showLoading.value = false;
         if (res.data.code == 200) {

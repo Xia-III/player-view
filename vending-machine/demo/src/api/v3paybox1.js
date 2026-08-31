@@ -98,10 +98,10 @@ export const CreateLeaseOrder = data => request({
     data
 })
 // 确认归还(ConfirmReturn)：通知设备按原货道行列开柜
-export const ConfirmReturn = params => request({
+export const ConfirmReturn = data => request({
     method: 'POST',
     url: vending + 'api/v3/LeasePlayer/ConfirmReturn',
-    params
+    data
 })
 // 归还结算(SettleReturn)：暂屏蔽，由设备0x18回报触发结算
 export const SettleReturn = params => request({
