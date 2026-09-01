@@ -84,14 +84,6 @@ html,
 body {
   background-color: #f1f1f1;
   padding: 0;
-
-  // padding-bottom: 140px;
-  // background-color: #f1f1f1;
-  .van-overflow-hidden {
-    overflow: visible !important;
-    overflow-x: visible !important;
-    overflow-y: visible !important;
-  }
 }
 </style>
 

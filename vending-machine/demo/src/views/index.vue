@@ -325,13 +325,15 @@ const onLeaseAisle = (item) => {
     }
     showConfirmDialog({
         title: '租赁确认',
-        message:
-            '<div style="line-height: 26px;">' +
-            '<div>商品：' + item.goodsName + '</div>' +
-            '<div>定金：<span style="color:#d00d02;">￥' + toyuan(item.depositFee) + '</span></div>' +
+            message:
+                '<div style="line-height: 26px;">' +
+                '<div>商品：' + item.goodsName + '</div>' +
+                '<div>定金：<span style="color:#d00d02;">￥' + toyuan(item.depositFee) + '</span></div>' +
             '<div>租金：<span style="color:#d00d02;">￥' + toyuan(item.rentPricePerMinute) + '/分钟</span></div>' +
+            '<div style="color:#1989fa;font-size:12px;">计费规则：租用时长按最小计时长单位计算，不足最小单位按最小单位算</div>' +
+            '<div style="color:#1989fa;font-size:12px;">扣费规则：使用定金进行扣费，归还设备时剩余定金原路退回</div>' +
             '</div>',
-        allowHtml: true
+            allowHtml: true
     }).then(() => {
         createLeaseOrder(item)
     }).catch(() => {
@@ -1068,12 +1070,16 @@ watch(        //监测路由id的变化
 
         .info {
             flex: 1;
+            min-width: 0;
             margin-left: 25px;
 
             p {
                 font-size: 28px;
                 color: #333;
                 margin: 10px 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .playerId {
@@ -1443,9 +1449,9 @@ watch(        //监测路由id的变化
     margin-top: 3%;
     margin-bottom: 100px;
     padding: 30px;
-    width: 85%;
+    width: 92%;
     margin-left: 4%;
-    border-radius: 15px;
+    border-radius: 15px; 
 
     .cheap {
         span {
@@ -1472,6 +1478,7 @@ watch(        //监测路由id的变化
 
         .leaseItem {
             position: relative;
+            min-width: 0;
             border: 2px solid rgb(93, 195, 255);
             border-radius: 15px;
             padding: 12px;
@@ -1498,14 +1505,20 @@ watch(        //监测路由id的变化
             img {
                 width: 90px;
                 height: 90px;
+                max-width: 100%;
                 border-radius: 10px;
             }
 
             .goodsName {
+                width: 100%;
                 font-size: 26px;
                 font-weight: 600;
                 margin-top: 8px;
                 color: #000;
+                text-align: center;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .rent {

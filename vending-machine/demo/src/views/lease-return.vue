@@ -102,7 +102,12 @@ const onRefresh = () => {
 const onConfirmReturn = (order) => {
     showConfirmDialog({
         title: '归还确认',
-        message: '请将「' + order.goodsName + '」放回 ' + order.aisleName + ' 货道',
+        message:
+            '<div style="line-height: 26px;">' +
+            '<div>请将「' + order.goodsName + '」放回 ' + order.aisleName + ' 货道</div>' +
+            '<div style="color:#1989fa;font-size:12px;">计费规则：租用时长按最小计时长单位计算，不足最小单位按最小单位算</div>' +
+            '</div>',
+        allowHtml: true,
         confirmButtonText: '已放回',
         cancelButtonText: '取消'
     }).then(() => {
@@ -164,6 +169,7 @@ onMounted(() => {
 
 <style scoped lang="less">
 .leaseReturn {
+    min-height: 1300px;
     padding-bottom: 100px;
 
     .goBorrow {
@@ -183,7 +189,7 @@ onMounted(() => {
     background-color: #fff;
     margin-top: 3%;
     padding: 30px;
-    width: 85%;
+    width: 92%;
     margin-left: 4%;
     border-radius: 15px;
 

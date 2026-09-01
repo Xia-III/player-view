@@ -1,0 +1,5 @@
+[     990ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8080/favicon.ico:0
+[    1027ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://www.huanxizn.com/center/hub/admin/negotiate?negotiateVersion=1:0
+[    1028ms] [ERROR] [2026-09-01T06:44:58.832Z] Error: Failed to complete negotiation with the server: Error: : Status code '401' @ webpack-internal:///./node_modules/@microsoft/signalr/dist/esm/Utils.js:360
+[    1028ms] [ERROR] [2026-09-01T06:44:58.832Z] Error: Failed to start the connection: Error: Failed to complete negotiation with the server: Error: : Status code '401' @ webpack-internal:///./node_modules/@microsoft/signalr/dist/esm/Utils.js:360
+[    1043ms] [LOG] {code: 200, message: 操作成功, data: Object, totalCount: 0} @ webpack-internal:///./node_modules/babel-loader/lib/index.js??clonedRuleSet-40.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./src/views/login.vue?vue&type=script&setup=true&lang=js:183

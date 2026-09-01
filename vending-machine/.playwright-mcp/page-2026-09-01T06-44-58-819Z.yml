@@ -1,0 +1,44 @@
+- generic [ref=e4]:
+  - generic [ref=e6]:
+    - text: 
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - text: 今日总收益
+          - generic [ref=e10]: 
+        - generic [ref=e11]: "0.00"
+        - paragraph [ref=e12]:
+          - generic [ref=e13]: 详情
+      - paragraph [ref=e14]: 代理ID:1
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - generic [ref=e18]: 合计投币
+        - generic [ref=e19]: 0个
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - text: 线下/线上
+          - generic [ref=e22]: 
+        - generic [ref=e23]: 0个/0个
+    - generic [ref=e24]:
+      - button "设备管理 在线/离线:0/0" [ref=e25]:
+        - generic [ref=e26]: 设备管理
+        - generic [ref=e27]: 在线/离线:0/0
+      - button "经营统计" [ref=e28]
+      - button "会员管理" [ref=e30]
+    - generic [ref=e32]:
+      - paragraph [ref=e35]: 套餐设置
+      - paragraph [ref=e38]: 远程投币
+      - paragraph [ref=e41]: 订单管理
+      - paragraph [ref=e44]: 抖音核销
+      - paragraph [ref=e47]: 留言投诉
+    - dialog [ref=e48]
+  - tablist [ref=e63]:
+    - tab " 首页" [selected] [ref=e64] [cursor=pointer]:
+      - generic [ref=e65]: 
+      - generic [ref=e67]: 首页
+    - tab " 设备绑定" [ref=e68] [cursor=pointer]:
+      - generic [ref=e69]: 
+      - generic [ref=e71]: 设备绑定
+    - tab " 我的" [ref=e72] [cursor=pointer]:
+      - generic [ref=e73]: 
+      - generic [ref=e75]: 我的
